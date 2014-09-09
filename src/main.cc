@@ -33,57 +33,6 @@ int main(int argc, char * argv[]) {
 
     cerr << "Ready" << endl;
 
-    //const Dictionary & words = parser->getWordTable();
-    //const TagSet & tags = parser->getTagSet();
-    //int depth = tags.getDepth();
-
-    /*
-    int cid1 = model.category->getCategoryId("VP");
-    int cid2 = model.category->getCategoryId("VB");
-    int cid3 = model.category->getCategoryId("NP");
-    cout << model.grammar[0]->getBinaryRule(cid1, cid2, cid3).getScore(38, 16, 11) << endl;
-    cout << model.grammar[0]->getBinaryRule(cid1, cid2, cid3).getScore(38, 16, 12) << endl;
-    */
-
-    /*
-    int c1 = tags.getTagId("NP");
-    int c2 = tags.getTagId("DT");
-
-    cout << c1 << ' ' << c2 << endl;
-
-    for (int lv = 0; lv < depth; ++lv) {
-        Grammar & grammar = parser->getGrammar(lv);
-        UnaryRule & rule = grammar.getUnaryRule(c1, c2);
-        int n1 = rule.numParentSubtags();
-        int n2 = rule.numChildSubtags();
-        printf("parent=%d, child=%d\n", n1, n2);
-        for (int i1 = 0; i1 < n1; ++i1) {
-            for (int i2 = 0; i2 < n2; ++i2) {
-                double score = rule.getScore(i1, i2);
-                if (score == 0.0) printf("___ ");
-                else printf("%3.0f ", log(score));
-            }
-            printf("\n");
-        }
-    }
-    */
-
-    /*
-    int cid = category.getCategoryId("DT");
-    int wid = word_table.getId("the");
-
-    cout << cid << ' ' << wid << endl;
-
-    for (int lv = 0; lv < depth; ++lv) {
-        LexiconEntry & ent = parser->getLexicon(lv).getEntry(cid, wid);
-        int n = category.getNumSubcategories(cid, lv);
-        cout << endl << "level = " << lv << endl;
-        for (int i = 0; i < n; ++i) {
-            cout << ent.getScore(i) << endl;
-        }
-    }
-    */
-
     Timer timer;
 
     string line;
@@ -92,7 +41,9 @@ int main(int argc, char * argv[]) {
     while (getline(cin, line)) {
         boost::trim(line);
         vector<string> ls;
-        boost::split(ls, line, boost::is_any_of(" "));
+        if (!line.empty()) {
+            boost::split(ls, line, boost::is_space(), boost::algorithm::token_compress_on);
+        }
         
         ++total_lines;
         total_words += ls.size();
