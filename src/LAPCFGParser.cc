@@ -646,45 +646,74 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & text) const
 
     // build max-rule parse tree
 
-    function<Tree<string> * (int, int, int, bool)> buildTree
+    function<void(Tree<string> &, Tree<string> *)> addChildOrCoalesce
+        = [](Tree<string> & parent_tree, Tree<string> * child_tree) {
+    
+        string ptag = parent_tree.value();
+        string ctag = child_tree->value();
+        string pbar = ptag;
+        if (pbar.empty() || pbar[0] != '@') {
+            pbar = "@" + pbar;
+        }
+
+        if (ctag == pbar) {
+            // (X (...) (@X foo bar)) -> (X (...) foo bar)
+            //cerr << "[Coalesce] " << ptag << "(" << pbar << ") " << ctag << endl;
+            int nc = child_tree->numChildren();
+            for (int i = 0; i < nc; ++i) {
+                parent_tree.addChild(new Tree<string>(child_tree->child(i)));
+            }
+            delete child_tree;
+        } else {
+            // add as child
+            //cerr << "[Add] " << ptag << "(" << pbar << ") " << ctag << endl;
+            parent_tree.addChild(child_tree);
+        }
+    };
+
+    function<Tree<string> *(int, int, int, bool)> buildTree
         = [&](int begin, int end, int ptag, bool first_time) -> Tree<string> * {
         
         if (ptag < 0) return nullptr; // for ptag = -1
 
         int ctag = maxc_child[begin][end][ptag];
 
+        Tree<string> * parent_tree = nullptr;
+
         if (ctag != -1 && first_time) {
             // make unary derivation
+
             Tree<string> * child_tree = buildTree(begin, end, ctag, false);
-            if (!child_tree) return nullptr;
-            Tree<string> * parent_tree = new Tree<string>(tag_set_->getTagName(ptag));
-            parent_tree->addChild(child_tree);
-            return parent_tree;
+            if (child_tree) {
+                parent_tree = new Tree<string>(tag_set_->getTagName(ptag));
+                addChildOrCoalesce(*parent_tree, child_tree);
+            }
         } else if (end - begin > 1) {
             // make binary derivation
+            
             int ltag = maxc_left[begin][end][ptag];
             int rtag = maxc_right[begin][end][ptag];
             int mid = maxc_mid[begin][end][ptag];
             Tree<string> * left_tree = buildTree(begin, mid, ltag, true);
             Tree<string> * right_tree = buildTree(mid, end, rtag, true);
-            if (!left_tree || !right_tree) {
+            if (left_tree && right_tree) {
+                parent_tree = new Tree<string>(tag_set_->getTagName(ptag));
+                addChildOrCoalesce(*parent_tree, left_tree);
+                addChildOrCoalesce(*parent_tree, right_tree);
+            } else {
                 delete left_tree;
                 delete right_tree;
-                return nullptr;
             }
-            Tree<string> * parent_tree = new Tree<string>(tag_set_->getTagName(ptag));
-            parent_tree->addChild(left_tree);
-            parent_tree->addChild(right_tree);
-            return parent_tree;
+
         } else {
             // make lexical/word nodes
-            Tree<string> * parent_node = new Tree<string>(tag_set_->getTagName(ptag));
+            
+            parent_tree = new Tree<string>(tag_set_->getTagName(ptag));
             Tree<string> * word_node = new Tree<string>(text[begin]);
-            parent_node->addChild(word_node);
-            return parent_node;
+            parent_tree->addChild(word_node);
         }
 
-        // never come here
+        return parent_tree; // complete tree or nullptr
     };
 
     Tree<string> * parse = buildTree(0, num_words, root_tag, true);

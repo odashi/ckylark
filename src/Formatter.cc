@@ -13,12 +13,13 @@ string Formatter::ToPennTreeBank(const Tree<string> & parse) {
         return "()";
     }
 
-    string ret = "(" + parse.value() + " " + ToPennTreeBank(parse.child(0));
-    if (parse.numChildren() >= 2) {
-        ret += " " + ToPennTreeBank(parse.child(1));
+    string repr = "(" + parse.value();
+    int nc = parse.numChildren();
+    for (int i = 0; i < nc; ++i) {
+        repr += " " + ToPennTreeBank(parse.child(i));
     }
-    ret += ")";
-    return ret;
+    repr += ")";
+    return repr;
 }
 
 } // namespace AHCParser

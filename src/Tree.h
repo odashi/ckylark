@@ -11,10 +11,16 @@ template <class T>
 class Tree {
 
     Tree() = delete;
-    Tree(const Tree &) = delete;
 
 public:
-    Tree(const T & value) : value_(value), parent_(nullptr), children_() {}
+    explicit Tree(const T & value) : value_(value), parent_(nullptr), children_() {}
+
+    Tree(const Tree & src) : value_(src.value_), parent_(nullptr), children_() {
+        for (const Tree<T> * child : src.children_) {
+            addChild(child->copyTree());
+        }
+    }
+
     ~Tree() {
         for (Tree<T> * child : children_) {
             delete child;
@@ -74,6 +80,14 @@ private:
         } else {
             roots.push_back(std::shared_ptr<Tree<T> >(copyTree(leaf_level - root_level)));
         }
+    }
+
+    Tree<T> * copyTree() const {
+        Tree<T> * node = new Tree<T>(value_);
+        for (const Tree<T> * child : children_) {
+            node->addChild(child->copyTree());
+        }
+        return node;
     }
 
     Tree<T> * copyTree(int rest_depth) const {
