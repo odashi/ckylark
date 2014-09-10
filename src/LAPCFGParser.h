@@ -25,7 +25,7 @@ public:
 
     static std::shared_ptr<LAPCFGParser> loadFromBerkeleyDump(const std::string & path);
 
-    std::shared_ptr<Tree<std::string> > parse(const std::vector<std::string> & text) const;
+    std::shared_ptr<Tree<std::string> > parse(const std::vector<std::string> & sentence) const;
 
     Dictionary & getWordTable() { return *word_table_; }
     TagSet & getTagSet() { return *tag_set_; }
@@ -43,6 +43,8 @@ private:
     void loadLexicon(const std::string & path);
     void loadGrammar(const std::string & path);
     void generateCoarseModels();
+
+    std::vector<std::string> escapeBrackets(const std::vector<std::string> & sentence) const;
 
     std::shared_ptr<Tree<std::string> > getDefaultParse() const;
 

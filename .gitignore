@@ -11,5 +11,6 @@ install-sh
 Makefile
 Makefile.in
 missing
+mydata
 stamp-h1
 
