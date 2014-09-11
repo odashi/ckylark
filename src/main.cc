@@ -8,6 +8,7 @@
 #include <iostream>
 #include <cstdio>
 #include <cmath>
+#include <fstream>
 #include <memory>
 #include <string>
 #include <vector>
@@ -33,18 +34,33 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
 
 int main(int argc, char * argv[]) {
     unique_ptr<ArgumentParser> ap = ::parseArgs(argc, argv);
-    shared_ptr<LAPCFGParser> parser = LAPCFGParser::loadFromBerkeleyDump(ap->getString("model"));
+    
+    string ifname = ap->getString("input");
+    ifstream ifs(ifname);
+    if (!ifs.is_open()) {
+        cerr << "ERROR: cannot open file to read: " << ifname << endl;
+        return 1;
+    }
 
+    string ofname = ap->getString("output");
+    ofstream ofs(ofname);
+    if (!ofs.is_open()) {
+        cerr << "ERROR: cannot open file to write: " << ofname << endl;
+        return 1;
+    }
+
+    shared_ptr<LAPCFGParser> parser = LAPCFGParser::loadFromBerkeleyDump(ap->getString("model"));
     parser->setUNKLexiconSmoothing(ap->getReal("smooth-unklex"));
 
-    cerr << "Ready" << endl;
-
     Timer timer;
+
+    cerr << "Ready" << endl;
 
     string line;
     int total_lines = 0;
     int total_words = 0;
-    while (getline(cin, line)) {
+    
+    while (getline(ifs, line)) {
         boost::trim(line);
         vector<string> ls;
         if (!line.empty()) {
@@ -65,7 +81,7 @@ int main(int argc, char * argv[]) {
         string repr = Formatter::ToPennTreeBank(*parse);
         cerr << "  Parse: " << repr << endl;
         fprintf(stderr, "  Time: %.3fs\n", lap);
-        cout << repr << endl;
+        ofs << repr << endl;
     }
 
     cerr << endl;
