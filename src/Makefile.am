@@ -11,6 +11,8 @@ ahcparse_SOURCES = \
     Grammar.h \
     LAPCFGParser.cc \
     LAPCFGParser.h \
+    Lattice.cc \
+    Lattice.h \
     Lexicon.cc \
     Lexicon.h \
     Mapping.cc \
