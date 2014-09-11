@@ -64,7 +64,7 @@ int main(int argc, char * argv[]) {
 
         string repr = Formatter::ToPennTreeBank(*parse);
         cerr << "  Parse: " << repr << endl;
-        fprintf(stderr, "  Time: %.4fs\n", lap);
+        fprintf(stderr, "  Time: %.3fs\n", lap);
         cout << repr << endl;
     }
 
