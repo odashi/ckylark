@@ -20,6 +20,10 @@ void Lattice::addEdge(size_t begin, size_t end, const Lattice::Edge & edge) {
         edge_list_[begin].resize(end + 1);
     }
 
+    for (Edge & parallel : edge_list_[begin][end]) {
+        if (edge.word == parallel.word) throw runtime_error("Lattice: duplicated edges");
+    }
+
     edge_list_[begin][end].push_back(edge);
 }
 
