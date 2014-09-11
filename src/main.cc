@@ -17,9 +17,13 @@ using namespace AHCParser;
 
 unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     unique_ptr<ArgumentParser> ap(new ArgumentParser("ahcparse"));
+    
     ap->addArgument(ArgumentParser::ARGTYPE_STRING, "input", "PATH", "/dev/stdin", "input file", false);
     ap->addArgument(ArgumentParser::ARGTYPE_STRING, "output", "PATH", "/dev/stdout", "output file", false);
     ap->addArgument(ArgumentParser::ARGTYPE_STRING, "model", "PATH", "", "model directory", true);
+
+    ap->addArgument(ArgumentParser::ARGTYPE_REAL, "smooth-unklex", "FLOAT", "1e-10", "smoothing strength using UNK lexicon", false);
+
     if (!ap->parseArgs(argc, argv)) {
         ap->printUsage();
         exit(0);
@@ -30,6 +34,8 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
 int main(int argc, char * argv[]) {
     unique_ptr<ArgumentParser> ap = ::parseArgs(argc, argv);
     shared_ptr<LAPCFGParser> parser = LAPCFGParser::loadFromBerkeleyDump(ap->getString("model"));
+
+    parser->setUNKLexiconSmoothing(ap->getReal("smooth-unklex"));
 
     cerr << "Ready" << endl;
 

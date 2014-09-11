@@ -32,11 +32,16 @@ public:
     Lexicon & getLexicon(int level) { return *(lexicon_[level]); }
     Grammar & getGrammar(int level) { return *(grammar_[level]); }
 
+    double getUNKLexiconSmoothing() const { return smooth_unklex_; }
+    void setUNKLexiconSmoothing(double value);
+
 private:
     std::shared_ptr<Dictionary> word_table_;
     std::shared_ptr<TagSet> tag_set_;
     std::vector<std::shared_ptr<Lexicon> > lexicon_;
     std::vector<std::shared_ptr<Grammar> > grammar_;
+
+    double smooth_unklex_;
 
     void loadWordTable(const std::string & path);
     void loadTagSet(const std::string & path);

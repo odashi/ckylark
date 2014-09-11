@@ -19,7 +19,9 @@ using namespace std;
 
 namespace AHCParser {
 
-LAPCFGParser::LAPCFGParser() {}
+LAPCFGParser::LAPCFGParser()
+    : smooth_unklex_(0) {
+}
 
 LAPCFGParser::~LAPCFGParser() {}
 
@@ -186,13 +188,16 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
             int wid = wid_list[begin];
             
             for (int tag = 0; tag < num_tags; ++tag) {
-                const LexiconEntry * ent = cur_lexicon.getEntry(tag, wid);
-                if (!ent) continue;
-                int num_sub = ent->numSubtags();
+                const LexiconEntry * ent_word = cur_lexicon.getEntry(tag, wid);
+                const LexiconEntry * ent_unk = cur_lexicon.getEntry(tag, -1);
+                if (!ent_word && !ent_unk) continue;
+                int num_sub = tag_set_->numSubtags(tag, level);
                 
                 for (int sub = 0; sub < num_sub; ++sub) {
                     if (!allowed[begin][end][tag][sub]) continue;
-                    inside[begin][end][tag][sub] = ent->getScore(sub);
+                    inside[begin][end][tag][sub] =
+                        (1.0 - smooth_unklex_) * (ent_word ? ent_word->getScore(sub) : 0.0) +
+                        smooth_unklex_ * (ent_unk ? ent_unk->getScore(sub) : 0.0);
                     //cerr << begin << "(" << sentence[begin] << ")->"
                     //    << tag_set_->getTagName(tag) << "[" << sub << "] = "
                     //    << inside[begin][end][tag][sub] << endl;
@@ -553,16 +558,18 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
                 for (int tag = 0; tag < num_tags; ++tag) {
                     int wid = wid_list[begin];
-                    const LexiconEntry * ent = fine_lexicon.getEntry(tag, wid);
-                    if (!ent) continue;
-                    int num_sub = ent->numSubtags();
-
+                    const LexiconEntry * ent_word = fine_lexicon.getEntry(tag, wid);
+                    const LexiconEntry * ent_unk = fine_lexicon.getEntry(tag, -1);
+                    if (!ent_word && !ent_unk) continue;
+                    int num_sub = tag_set_->numSubtags(tag, fine_level);
                     double rule_score = 0.0;
 
                     for (int sub = 0; sub < num_sub; ++sub) {
                         if (!allowed[begin][end][tag][sub]) continue;
                         double po = outside[begin][end][tag][sub];
-                        double beta = ent->getScore(sub);
+                        double beta =
+                            (1.0 - smooth_unklex_) * (ent_word ? ent_word->getScore(sub) : 0.0) +
+                            smooth_unklex_ * (ent_unk ? ent_unk->getScore(sub) : 0.0);
                         rule_score += po * beta;
                     }
 
@@ -719,6 +726,12 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     Tree<string> * parse = buildTree(0, num_words, root_tag, true);
     if (parse) return shared_ptr<Tree<string> >(parse);
     else return getDefaultParse();
+}
+
+void LAPCFGParser::setUNKLexiconSmoothing(double value) {
+    if (value < 0.0 || value > 1.0)
+        throw runtime_error("LAPCFGParser::setUNKLexiconSmoothing(): invalid value");
+    smooth_unklex_ = value;
 }
 
 shared_ptr<Tree<string> > LAPCFGParser::getDefaultParse() const {
