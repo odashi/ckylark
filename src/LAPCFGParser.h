@@ -44,8 +44,6 @@ private:
     void loadGrammar(const std::string & path);
     void generateCoarseModels();
 
-    std::vector<std::string> escapeBrackets(const std::vector<std::string> & sentence) const;
-
     std::shared_ptr<Tree<std::string> > getDefaultParse() const;
 
 }; // struct Model

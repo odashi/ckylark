@@ -6,9 +6,9 @@ namespace AHCParser {
 
 string Formatter::ToPennTreeBank(const Tree<string> & parse) {
     if (parse.isLeaf()) {
-        string tag = parse.value();
+        string tag = escapeForPennTreeBank(parse.value());
         if (!tag.empty()) {
-            return parse.value();
+            return tag;
         }
         return "()";
     }
@@ -20,6 +20,18 @@ string Formatter::ToPennTreeBank(const Tree<string> & parse) {
     }
     repr += ")";
     return repr;
+}
+
+string Formatter::escapeForPennTreeBank(const string & raw) {
+    string escaped = "";
+    for (char c : raw) {
+        switch (c) {
+            case '(': escaped += "-LRB-"; break;
+            case ')': escaped += "-RRB-"; break;
+            default: escaped += c;
+        }
+    }
+    return escaped;
 }
 
 } // namespace AHCParser

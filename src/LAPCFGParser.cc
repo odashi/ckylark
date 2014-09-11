@@ -127,15 +127,11 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
         return getDefaultParse();
     }
 
-    // escaping
-
-    vector<string> escaped_sentence = escapeBrackets(sentence);
-
     // convert words into ID
     vector<int> wid_list(num_words);
     cerr << "  WID:";
     for (int i = 0; i < num_words; ++i) {
-        wid_list[i] = word_table_->getId(escaped_sentence[i]);
+        wid_list[i] = word_table_->getId(sentence[i]);
         cerr << " " << wid_list[i];
     }
     cerr << endl;
@@ -197,7 +193,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                 for (int sub = 0; sub < num_sub; ++sub) {
                     if (!allowed[begin][end][tag][sub]) continue;
                     inside[begin][end][tag][sub] = ent->getScore(sub);
-                    //cerr << begin << "(" << escaped_sentence[begin] << ")->"
+                    //cerr << begin << "(" << sentence[begin] << ")->"
                     //    << tag_set_->getTagName(tag) << "[" << sub << "] = "
                     //    << inside[begin][end][tag][sub] << endl;
                 }
@@ -713,7 +709,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
             // make lexical/word nodes
             
             parent_tree = new Tree<string>(tag_set_->getTagName(ptag));
-            Tree<string> * word_node = new Tree<string>(escaped_sentence[begin]);
+            Tree<string> * word_node = new Tree<string>(sentence[begin]);
             parent_tree->addChild(word_node);
         }
 
@@ -727,23 +723,6 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
 shared_ptr<Tree<string> > LAPCFGParser::getDefaultParse() const {
     return shared_ptr<Tree<string> >(new Tree<string>(""));
-}
-
-vector<string> LAPCFGParser::escapeBrackets(const vector<string> & sentence) const {
-    vector<string> escaped;
-    for (size_t i = 0; i < sentence.size(); ++i) {
-        string s = "";
-        for (char c : sentence[i]) {
-            switch (c) {
-                case '(': s += "-LRB-"; break;
-                case ')': s += "-RRB-"; break;
-                default: s += c;
-            }
-        }
-        escaped.push_back(s);
-    }
-
-    return escaped;
 }
 
 } // namespace AHCParser

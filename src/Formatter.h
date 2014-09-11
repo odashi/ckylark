@@ -15,6 +15,9 @@ class Formatter {
 public:
     static std::string ToPennTreeBank(const Tree<std::string> & parse);
 
+private:
+    static std::string escapeForPennTreeBank(const std::string & raw);
+
 }; // class Formatter
 
 } // namespace AHCParser
