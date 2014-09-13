@@ -17,7 +17,7 @@ using namespace std;
 using namespace AHCParser;
 
 unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
-    unique_ptr<ArgumentParser> ap(new ArgumentParser("ahcparse"));
+    unique_ptr<ArgumentParser> ap(new ArgumentParser("ahcparse -model <model-dir>"));
     
     ap->addArgument(ArgumentParser::ARGTYPE_STRING, "input", "PATH", "/dev/stdin", "input file", false);
     ap->addArgument(ArgumentParser::ARGTYPE_STRING, "output", "PATH", "/dev/stdout", "output file", false);
