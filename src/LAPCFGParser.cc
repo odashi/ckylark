@@ -1,5 +1,6 @@
 #include "LAPCFGParser.h"
 
+#include "CKYTable.h"
 #include "Mapping.h"
 #include "ModelProjector.h"
 
@@ -122,7 +123,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     int depth = tag_set_->getDepth();
     int root_tag = tag_set_->getTagId("ROOT");
     double prune_threshold = 1e-5;
-    boost::array<int, 3> shape_cky = {{ num_words, num_words + 1, num_tags }};
+    //boost::array<int, 3> shape_cky = {{ num_words, num_words + 1, num_tags }};
 
     // check empty sentence
     if (num_words == 0) {
@@ -140,9 +141,12 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
     // pre-parsing
 
-    boost::multi_array<vector<bool>, 3> allowed(shape_cky);
-    boost::multi_array<vector<double>, 3> inside(shape_cky);
-    boost::multi_array<vector<double>, 3> outside(shape_cky);
+    //boost::multi_array<vector<bool>, 3> allowed(shape_cky);
+    //boost::multi_array<vector<double>, 3> inside(shape_cky);
+    //boost::multi_array<vector<double>, 3> outside(shape_cky);
+    CKYTable<vector<bool> > allowed(num_words, num_tags);
+    CKYTable<vector<double> > inside(num_words, num_tags);
+    CKYTable<vector<double> > outside(num_words, num_tags);
     
     for (int level = 0; level < depth; ++level) {
         const Lexicon & cur_lexicon = *(lexicon_[level]);
@@ -159,12 +163,12 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
             for (int end = begin + 1; end <= num_words; ++end) {
                 for (int tag = 0; tag < num_tags; ++tag) {
                     int num_subtags_fine = tag_set_->numSubtags(tag, level);
-                    inside[begin][end][tag].assign(num_subtags_fine, 0.0);
-                    outside[begin][end][tag].assign(num_subtags_fine, 0.0);
+                    inside.at(begin, end, tag).assign(num_subtags_fine, 0.0);
+                    outside.at(begin, end, tag).assign(num_subtags_fine, 0.0);
                     if (level > 0) {
                         // initialize subtag constraints
                         int num_subtags_coarse = tag_set_->numSubtags(tag, level - 1);
-                        vector<bool> & allowed_fine = allowed[begin][end][tag];
+                        vector<bool> & allowed_fine = allowed.at(begin, end, tag);
                         vector<bool> allowed_coarse = allowed_fine;
                         allowed_fine.assign(num_subtags_fine, false);
                         for (int subtag_coarse = 0; subtag_coarse < num_subtags_coarse; ++subtag_coarse) {
@@ -175,7 +179,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                         }
                     } else {
                         // only 1 subtag is possible for the first time
-                        allowed[begin][end][tag].assign(num_subtags_fine, true);
+                        allowed.at(begin, end, tag).assign(num_subtags_fine, true);
                     }
                 }
             }
@@ -194,13 +198,13 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                 int num_sub = tag_set_->numSubtags(tag, level);
                 
                 for (int sub = 0; sub < num_sub; ++sub) {
-                    if (!allowed[begin][end][tag][sub]) continue;
-                    inside[begin][end][tag][sub] =
+                    if (!allowed.at(begin, end, tag)[sub]) continue;
+                    inside.at(begin, end, tag)[sub] =
                         (1.0 - smooth_unklex_) * (ent_word ? ent_word->getScore(sub) : 0.0) +
                         smooth_unklex_ * (ent_unk ? ent_unk->getScore(sub) : 0.0);
                     //cerr << begin << "(" << sentence[begin] << ")->"
                     //    << tag_set_->getTagName(tag) << "[" << sub << "] = "
-                    //    << inside[begin][end][tag][sub] << endl;
+                    //    << inside.at(begin, end, tag)[sub] << endl;
                 }
             }
         }
@@ -219,7 +223,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                         int num_psub = tag_set_->numSubtags(ptag, level);
                     
                         for (int psub = 0; psub < num_psub; ++psub) {
-                            if (!allowed[begin][end][ptag][psub]) continue;
+                            if (!allowed.at(begin, end, ptag)[psub]) continue;
                             double sum = 0.0;
 
                             for (int mid = begin + 1; mid < end; ++mid) {
@@ -229,7 +233,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                                     int num_lsub = tag_set_->numSubtags(ltag, level);
                             
                                     for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                        if (!allowed[begin][mid][ltag][lsub]) continue;
+                                        if (!allowed.at(begin, mid, ltag)[lsub]) continue;
                                     
                                         for (const BinaryRule * rule : binary_rules_pl) {
                                             int rtag = rule->right();
@@ -238,19 +242,19 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                                             if (score_list[psub][lsub].empty()) continue;
                                 
                                             for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                                if (!allowed[mid][end][rtag][rsub]) continue;
+                                                if (!allowed.at(mid, end, rtag)[rsub]) continue;
                                         
                                                 sum +=
                                                     score_list[psub][lsub][rsub] *
-                                                    inside[begin][mid][ltag][lsub] *
-                                                    inside[mid][end][rtag][rsub];
+                                                    inside.at(begin, mid, ltag)[lsub] *
+                                                    inside.at(mid, end, rtag)[rsub];
                                             }
                                         }
                                     }
                                 }
                             } // mid
 
-                            inside[begin][end][ptag][psub] = sum;
+                            inside.at(begin, end, ptag)[psub] = sum;
 
                         } // psub
                     } // ptag
@@ -266,7 +270,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                     delta_unary[ptag].assign(num_psub, 0.0);
                     
                     for (int psub = 0; psub < num_psub; ++psub) {
-                        if (!allowed[begin][end][ptag][psub]) continue;
+                        if (!allowed.at(begin, end, ptag)[psub]) continue;
 
                         for (const UnaryRule * rule : unary_rules_p) {
                             int ctag = rule->child();
@@ -275,10 +279,10 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                             auto & score_list = rule->getScoreList();
                             
                             for (int csub = 0; csub < num_csub; ++csub) {
-                                if (!allowed[begin][end][ctag][csub]) continue;
+                                if (!allowed.at(begin, end, ctag)[csub]) continue;
                                 delta_unary[ptag][psub] +=
                                     score_list[psub][csub] *
-                                    inside[begin][end][ctag][csub];
+                                    inside.at(begin, end, ctag)[csub];
                             }
                         }
                     }
@@ -287,8 +291,8 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                 for (int ptag = 0; ptag < num_tags; ++ptag) {
                     int num_psub = tag_set_->numSubtags(ptag, level);
                     for (int psub = 0; psub < num_psub; ++psub) {
-                        if (!allowed[begin][end][ptag][psub]) continue;
-                        inside[begin][end][ptag][psub] += delta_unary[ptag][psub];
+                        if (!allowed.at(begin, end, ptag)[psub]) continue;
+                        inside.at(begin, end, ptag)[psub] += delta_unary[ptag][psub];
                     }
                 }
 
@@ -299,8 +303,8 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                 for (int ptag = 0; ptag < num_tags; ++ptag) {
                     int num_psub = tag_set_->numSubtags(ptag, level);
                     for (int psub = 0; psub < num_psub; ++psub) {
-                        if (inside[begin][end][ptag][psub] > best_score) {
-                            best_score = inside[begin][end][ptag][psub];
+                        if (inside.at(begin, end, ptag)[psub] > best_score) {
+                            best_score = inside.at(begin, end, ptag)[psub];
                             best_ptag = ptag;
                             best_psub = psub;
                         }
@@ -315,7 +319,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
         // check if all possible parses are pruned
 
-        double sentence_score = inside[0][num_words][root_tag][0];
+        double sentence_score = inside.at(0, num_words, root_tag)[0];
         if (sentence_score == 0.0) {
             cerr << "**** No any possible parses! ****" << endl;
             return getDefaultParse();
@@ -323,7 +327,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
         
         // initialize outside scores of root
 
-        outside[0][num_words][root_tag][0] = 1.0;
+        outside.at(0, num_words, root_tag)[0] = 1.0;
 
         // calculate outside scores
 
@@ -341,7 +345,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                     delta_unary[ctag].assign(num_csub, 0.0);
 
                     for (int csub = 0; csub < num_csub; ++csub) {
-                        if (!allowed[begin][end][ctag][csub]) continue;
+                        if (!allowed.at(begin, end, ctag)[csub]) continue;
                         
                         for (const UnaryRule * rule : unary_rules_c) {
                             int ptag = rule->parent();
@@ -350,10 +354,10 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                             auto & score_list = rule->getScoreList();
 
                             for (int psub = 0; psub < num_psub; ++psub) {
-                                if (!allowed[begin][end][ptag][psub]) continue;
+                                if (!allowed.at(begin, end, ptag)[psub]) continue;
                                 delta_unary[ctag][csub] +=
                                     score_list[psub][csub] *
-                                    outside[begin][end][ptag][psub];
+                                    outside.at(begin, end, ptag)[psub];
                             }
                         }
                     }
@@ -362,7 +366,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                 for (int ctag = 0; ctag < num_tags; ++ctag) {
                     int num_csub = tag_set_->numSubtags(ctag, level);
                     for (int csub = 0; csub < num_csub; ++csub) {
-                        outside[begin][end][ctag][csub] += delta_unary[ctag][csub];
+                        outside.at(begin, end, ctag)[csub] += delta_unary[ctag][csub];
                     }
                 }
 
@@ -374,7 +378,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                         int num_psub = tag_set_->numSubtags(ptag, level);
 
                         for (int psub = 0; psub < num_psub; ++psub) {
-                            if (!allowed[begin][end][ptag][psub]) continue;
+                            if (!allowed.at(begin, end, ptag)[psub]) continue;
 
                             for (int mid = begin + 1; mid < end; ++mid) {
                                 
@@ -383,7 +387,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                                     int num_lsub = tag_set_->numSubtags(ltag, level);
 
                                     for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                        if (!allowed[begin][mid][ltag][lsub]) continue;
+                                        if (!allowed.at(begin, mid, ltag)[lsub]) continue;
 
                                         for (const BinaryRule * rule : binary_rules_pl) {
                                             int rtag = rule->right();
@@ -392,16 +396,16 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                                             if (score_list[psub][lsub].empty()) continue;
 
                                             for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                                if (!allowed[mid][end][rtag][rsub]) continue;
+                                                if (!allowed.at(mid, end, rtag)[rsub]) continue;
 
                                                 double rule_score = score_list[psub][lsub][rsub];
-                                                double parent_score = outside[begin][end][ptag][psub];
-                                                outside[begin][mid][ltag][lsub] +=
+                                                double parent_score = outside.at(begin, end, ptag)[psub];
+                                                outside.at(begin, mid, ltag)[lsub] +=
                                                     rule_score * parent_score *
-                                                    inside[mid][end][rtag][rsub];
-                                                outside[mid][end][rtag][rsub] +=
+                                                    inside.at(mid, end, rtag)[rsub];
+                                                outside.at(mid, end, rtag)[rsub] +=
                                                     rule_score * parent_score *
-                                                    inside[begin][mid][ltag][lsub];
+                                                    inside.at(begin, mid, ltag)[lsub];
                                             }
                                         }
                                     } // lsub
@@ -417,7 +421,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                     for (int csub = 0; csub < num_csub; ++csub) {
                         cerr << begin << "-" << end << ": " <<
                             "" << tag_set_->getTagName(ctag) << "[" << csub << "] =" <<
-                            outside[begin][end][ctag][csub] << endl;
+                            outside.at(begin, end, ctag)[csub] << endl;
                     }
                 }
                 */
@@ -441,11 +445,11 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
                     for (int psub = 0; psub < num_psub; ++psub) {
                         double posterior =
-                            inside[begin][end][ptag][psub] *
-                            outside[begin][end][ptag][psub] /
+                            inside.at(begin, end, ptag)[psub] *
+                            outside.at(begin, end, ptag)[psub] /
                             sentence_score;
                         if (posterior < prune_threshold) {
-                            allowed[begin][end][ptag][psub] = false;
+                            allowed.at(begin, end, ptag)[psub] = false;
                             //++num_pruned;
                         }
 
@@ -470,12 +474,17 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
     // retrieve max-rule parse over allowed nodes
     
-    boost::multi_array<double, 3> maxc_log_score(shape_cky); // log-likelihood
-    boost::multi_array<int, 3> maxc_left(shape_cky); // for binary derivation
-    boost::multi_array<int, 3> maxc_right(shape_cky); // for binary derivation
-    boost::multi_array<int, 3> maxc_mid(shape_cky); // for binary derivation
-    boost::multi_array<int, 3> maxc_child(shape_cky); // for unary derivation
-    double log_normalizer = log(inside[0][num_words][root_tag][0]);
+    //boost::multi_array<double, 3> maxc_log_score(shape_cky); // log-likelihood
+    //boost::multi_array<int, 3> maxc_left(shape_cky); // for binary derivation
+    //boost::multi_array<int, 3> maxc_right(shape_cky); // for binary derivation
+    //boost::multi_array<int, 3> maxc_mid(shape_cky); // for binary derivation
+    //boost::multi_array<int, 3> maxc_child(shape_cky); // for unary derivation
+    CKYTable<double> maxc_log_score(num_words, num_tags);
+    CKYTable<int> maxc_left(num_words, num_tags);
+    CKYTable<int> maxc_right(num_words, num_tags);
+    CKYTable<int> maxc_mid(num_words, num_tags);
+    CKYTable<int> maxc_child(num_words, num_tags);
+    double log_normalizer = log(inside.at(0, num_words, root_tag)[0]);
     double NEG_INFTY = -1e20;
     int fine_level = depth - 1;
     Lexicon & fine_lexicon = *(lexicon_[fine_level]);
@@ -488,11 +497,11 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
             // inirialize arrays
             
             for (int ptag = 0; ptag < num_tags; ++ptag) {
-                maxc_log_score[begin][end][ptag] = NEG_INFTY;
-                maxc_left[begin][end][ptag] = -1;
-                maxc_right[begin][end][ptag] = -1;
-                maxc_mid[begin][end][ptag] = -1;
-                maxc_child[begin][end][ptag] = -1;
+                maxc_log_score.at(begin, end, ptag) = NEG_INFTY;
+                maxc_left.at(begin, end, ptag) = -1;
+                maxc_right.at(begin, end, ptag) = -1;
+                maxc_mid.at(begin, end, ptag) = -1;
+                maxc_child.at(begin, end, ptag) = -1;
             }
             
             if (len > 1) {
@@ -510,28 +519,28 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                             auto & score_list = rule->getScoreList();
                             int rtag = rule->right();
                             int num_rsub = tag_set_->numSubtags(rtag, fine_level);
-                            double old_log_score = maxc_log_score[begin][end][ptag];
+                            double old_log_score = maxc_log_score.at(begin, end, ptag);
 
                             for (int mid = begin + 1; mid < end; ++mid) {
                                 double cur_log_score =
-                                    maxc_log_score[begin][mid][ltag] +
-                                    maxc_log_score[mid][end][rtag];
+                                    maxc_log_score.at(begin, mid, ltag) +
+                                    maxc_log_score.at(mid, end, rtag);
                                 if (cur_log_score < old_log_score) continue;
 
                                 double rule_score = 0.0;
 
                                 for (int psub = 0; psub < num_psub; ++psub) {
-                                    if (!allowed[begin][end][ptag][psub]) continue;
-                                    double po = outside[begin][end][ptag][psub];
+                                    if (!allowed.at(begin, end, ptag)[psub]) continue;
+                                    double po = outside.at(begin, end, ptag)[psub];
 
                                     for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                        if (!allowed[begin][mid][ltag][lsub]) continue;
+                                        if (!allowed.at(begin, mid, ltag)[lsub]) continue;
                                         if (score_list[psub][lsub].empty()) continue;
-                                        double li = inside[begin][mid][ltag][lsub];
+                                        double li = inside.at(begin, mid, ltag)[lsub];
 
                                         for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                            if (!allowed[mid][end][rtag][rsub]) continue;
-                                            double ri = inside[mid][end][rtag][rsub];
+                                            if (!allowed.at(mid, end, rtag)[rsub]) continue;
+                                            double ri = inside.at(mid, end, rtag)[rsub];
                                             double beta = score_list[psub][lsub][rsub];
                                             rule_score += po * li * ri * beta;
                                         }
@@ -544,10 +553,10 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
                                 if (cur_log_score > old_log_score) {
                                     old_log_score = cur_log_score;
-                                    maxc_log_score[begin][end][ptag] = cur_log_score;
-                                    maxc_left[begin][end][ptag] = ltag;
-                                    maxc_right[begin][end][ptag] = rtag;
-                                    maxc_mid[begin][end][ptag] = mid;
+                                    maxc_log_score.at(begin, end, ptag) = cur_log_score;
+                                    maxc_left.at(begin, end, ptag) = ltag;
+                                    maxc_right.at(begin, end, ptag) = rtag;
+                                    maxc_mid.at(begin, end, ptag) = mid;
                                 }
                             } // mid
                         } // rule
@@ -565,8 +574,8 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                     double rule_score = 0.0;
 
                     for (int sub = 0; sub < num_sub; ++sub) {
-                        if (!allowed[begin][end][tag][sub]) continue;
-                        double po = outside[begin][end][tag][sub];
+                        if (!allowed.at(begin, end, tag)[sub]) continue;
+                        double po = outside.at(begin, end, tag)[sub];
                         double beta =
                             (1.0 - smooth_unklex_) * (ent_word ? ent_word->getScore(sub) : 0.0) +
                             smooth_unklex_ * (ent_unk ? ent_unk->getScore(sub) : 0.0);
@@ -575,7 +584,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
                     if (rule_score == 0.0) continue;
 
-                    maxc_log_score[begin][end][tag] = log(rule_score) - log_normalizer;
+                    maxc_log_score.at(begin, end, tag) = log(rule_score) - log_normalizer;
                 }
             }
 
@@ -583,7 +592,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
             
             vector<double> after_unary(num_tags);
             for (int tag = 0; tag < num_tags; ++tag) {
-                after_unary[tag] = maxc_log_score[begin][end][tag];
+                after_unary[tag] = maxc_log_score.at(begin, end, tag);
             }
 
             for (int ptag = 0; ptag < num_tags; ++ptag) {
@@ -596,18 +605,18 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                     auto & score_list = rule->getScoreList();
                     int num_csub = tag_set_->numSubtags(ctag, fine_level);
 
-                    double cur_log_score = maxc_log_score[begin][end][ctag];
+                    double cur_log_score = maxc_log_score.at(begin, end, ctag);
                     if (cur_log_score < after_unary[ptag]) continue;
 
                     double rule_score = 0.0;
 
                     for (int psub = 0; psub < num_psub; ++psub) {
-                        if (!allowed[begin][end][ptag][psub]) continue;
-                        double po = outside[begin][end][ptag][psub];
+                        if (!allowed.at(begin, end, ptag)[psub]) continue;
+                        double po = outside.at(begin, end, ptag)[psub];
                         
                         for (int csub = 0; csub < num_csub; ++csub) {
-                            if (!allowed[begin][end][ctag][csub]) continue;
-                            double ci = inside[begin][end][ctag][csub];
+                            if (!allowed.at(begin, end, ctag)[csub]) continue;
+                            double ci = inside.at(begin, end, ctag)[csub];
                             double beta = score_list[psub][csub];
                             rule_score += po * ci * beta;
                         }
@@ -619,32 +628,32 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
                     if (cur_log_score > after_unary[ptag]) {
                         after_unary[ptag] = cur_log_score;
-                        maxc_child[begin][end][ptag] = ctag;
+                        maxc_child.at(begin, end, ptag) = ctag;
                     }
                 } // rule
             } // ptag
 
             for (int tag = 0; tag < num_tags; ++tag) {
-                maxc_log_score[begin][end][tag] = after_unary[tag];
+                maxc_log_score.at(begin, end, tag) = after_unary[tag];
             }
 
             /*
             for (int tag  = 0; tag < num_tags; ++tag) {
-                if (maxc_log_score[begin][end][tag] == NEG_INFTY) continue;
-                if (maxc_child[begin][end][tag] >= 0) {
+                if (maxc_log_score.at(begin, end, tag) == NEG_INFTY) continue;
+                if (maxc_child.at(begin, end, tag) >= 0) {
                     fprintf(stderr, "max-rule[%d:%d] %s -> %s (%e)\n",
                         begin, end,
                         tag_set_->getTagName(tag).c_str(),
-                        tag_set_->getTagName(maxc_child[begin][end][tag]).c_str(),
-                        maxc_log_score[begin][end][tag]);
-                } else if (maxc_left[begin][end][tag] >= 0) {
+                        tag_set_->getTagName(maxc_child.at(begin, end, tag)).c_str(),
+                        maxc_log_score.at(begin, end, tag));
+                } else if (maxc_left.at(begin, end, tag) >= 0) {
                     fprintf(stderr, "max-rule[%d:%d] %s -> %s/%d/%s (%e)\n",
                         begin, end,
                         tag_set_->getTagName(tag).c_str(),
-                        tag_set_->getTagName(maxc_left[begin][end][tag]).c_str(),
-                        maxc_mid[begin][end][tag],
-                        tag_set_->getTagName(maxc_right[begin][end][tag]).c_str(),
-                        maxc_log_score[begin][end][tag]);
+                        tag_set_->getTagName(maxc_left.at(begin, end, tag)).c_str(),
+                        maxc_mid.at(begin, end, tag),
+                        tag_set_->getTagName(maxc_right.at(begin, end, tag)).c_str(),
+                        maxc_log_score.at(begin, end, tag));
                 }
             }
             */
@@ -683,7 +692,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
         
         if (ptag < 0) return nullptr; // for ptag = -1
 
-        int ctag = maxc_child[begin][end][ptag];
+        int ctag = maxc_child.at(begin, end, ptag);
 
         Tree<string> * parent_tree = nullptr;
 
@@ -698,9 +707,9 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
         } else if (end - begin > 1) {
             // make binary derivation
             
-            int ltag = maxc_left[begin][end][ptag];
-            int rtag = maxc_right[begin][end][ptag];
-            int mid = maxc_mid[begin][end][ptag];
+            int ltag = maxc_left.at(begin, end, ptag);
+            int rtag = maxc_right.at(begin, end, ptag);
+            int mid = maxc_mid.at(begin, end, ptag);
             Tree<string> * left_tree = buildTree(begin, mid, ltag, true);
             Tree<string> * right_tree = buildTree(mid, end, rtag, true);
             if (left_tree && right_tree) {
