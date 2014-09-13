@@ -33,6 +33,9 @@ public:
     Lexicon & getLexicon(int level) { return *(lexicon_[level]); }
     Grammar & getGrammar(int level) { return *(grammar_[level]); }
 
+    double getPruningThreshold() const { return prune_threshold_; }
+    void setPruningThreshold(double value);
+
     double getUNKLexiconSmoothing() const { return smooth_unklex_; }
     void setUNKLexiconSmoothing(double value);
 
@@ -42,6 +45,7 @@ private:
     std::vector<std::shared_ptr<Lexicon> > lexicon_;
     std::vector<std::shared_ptr<Grammar> > grammar_;
 
+    double prune_threshold_;
     double smooth_unklex_;
 
     void loadWordTable(const std::string & path);
@@ -81,8 +85,7 @@ private:
         CKYTable<std::vector<bool> > & allowed,
         const CKYTable<std::vector<double> > & inside,
         const CKYTable<std::vector<double> > & outside,
-        int cur_level,
-        double threshold) const;
+        int cur_level) const;
 
 }; // struct Model
 

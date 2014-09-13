@@ -19,7 +19,8 @@ using namespace std;
 namespace AHCParser {
 
 LAPCFGParser::LAPCFGParser()
-    : smooth_unklex_(0) {
+    : prune_threshold_(1e-5)
+    , smooth_unklex_(0) {
 }
 
 LAPCFGParser::~LAPCFGParser() {}
@@ -120,7 +121,6 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     const int num_tags = tag_set_->numTags();
     const int depth = tag_set_->getDepth();
     const int root_tag = tag_set_->getTagId("ROOT");
-    const double prune_threshold = 1e-5;
 
     // check empty sentence
     if (num_words == 0) {
@@ -148,7 +148,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
         }
 
         calculateOutsideScores(allowed, inside, outside, level);
-        pruneCharts(allowed, inside, outside, level, prune_threshold);
+        pruneCharts(allowed, inside, outside, level);
 
         //fprintf(stderr, "pre-parse %d ... ROOT: %e\n", level, inside[0][num_words][root_tag][0]);
     } // level
@@ -411,6 +411,12 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     Tree<string> * parse = buildTree(0, num_words, root_tag, true);
     if (parse) return shared_ptr<Tree<string> >(parse);
     else return getDefaultParse();
+}
+
+void LAPCFGParser::setPruningThreshold(double value) {
+    if (value < 0.0 || value > 1.0)
+        throw runtime_error("LAPCFGParser::setPruningThreshold(): invalid value");
+    prune_threshold_ = value;
 }
 
 void LAPCFGParser::setUNKLexiconSmoothing(double value) {
@@ -740,8 +746,7 @@ void LAPCFGParser::pruneCharts(
     CKYTable<vector<bool> > & allowed,
     const CKYTable<vector<double> > & inside,
     const CKYTable<vector<double> > & outside,
-    int cur_level,
-    double threshold) const {
+    int cur_level) const {
     
     const int num_words = allowed.numWords();
     const int num_tags = allowed.numTags();
@@ -766,7 +771,7 @@ void LAPCFGParser::pruneCharts(
                         inside.at(begin, end, ptag)[psub] *
                         outside.at(begin, end, ptag)[psub] /
                         sentence_score;
-                    if (posterior < threshold) {
+                    if (posterior < prune_threshold_) {
                         allowed.at(begin, end, ptag)[psub] = false;
                         //++num_pruned;
                     }

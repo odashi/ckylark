@@ -23,6 +23,7 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     ap->addArgument(ArgumentParser::ARGTYPE_STRING, "output", "PATH", "/dev/stdout", "output file", false);
     ap->addArgument(ArgumentParser::ARGTYPE_STRING, "model", "PATH", "", "model directory", true);
 
+    ap->addArgument(ArgumentParser::ARGTYPE_REAL, "prune-threshold", "FLOAT", "1e-5", "coarse-to-fine pruning threshold", false);
     ap->addArgument(ArgumentParser::ARGTYPE_REAL, "smooth-unklex", "FLOAT", "1e-10", "smoothing strength using UNK lexicon", false);
 
     if (!ap->parseArgs(argc, argv)) {
@@ -50,6 +51,7 @@ int main(int argc, char * argv[]) {
     }
 
     shared_ptr<LAPCFGParser> parser = LAPCFGParser::loadFromBerkeleyDump(ap->getString("model"));
+    parser->setPruningThreshold(ap->getReal("prune-threshold"));
     parser->setUNKLexiconSmoothing(ap->getReal("smooth-unklex"));
 
     Timer timer;
