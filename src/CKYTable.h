@@ -30,11 +30,18 @@ public:
         delete[] mem_;
     }
 
-    T & at(size_t begin, size_t end, size_t tag) {
+    inline const T & at(size_t begin, size_t end, size_t tag) const {
         if (begin >= num_words_ || end > num_words_ || end <= begin || tag >= num_tags_)
             throw std::runtime_error("CKYTable: invalid index");
         return mem_[(begin << stride1_) + (end << stride2_) + tag];
     }
+
+    inline T & at(size_t begin, size_t end, size_t tag) {
+        return const_cast<T &>(static_cast<const CKYTable &>(*this).at(begin, end, tag));
+    }
+
+    inline size_t numWords() const { return num_words_; }
+    inline size_t numTags() const { return num_tags_; }
 
 private:
     size_t num_words_;

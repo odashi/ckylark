@@ -1,6 +1,7 @@
 #ifndef AHCP_LAPCFG_PARSER_H_
 #define AHCP_LAPCFG_PARSER_H_
 
+#include "CKYTable.h"
 #include "Dictionary.h"
 #include "TagSet.h"
 #include "Lexicon.h"
@@ -48,8 +49,40 @@ private:
     void loadLexicon(const std::string & path);
     void loadGrammar(const std::string & path);
     void generateCoarseModels();
-
+    
     std::shared_ptr<Tree<std::string> > getDefaultParse() const;
+
+    std::vector<int> makeWordIDList(const std::vector<std::string> & sentence) const;
+
+    void initializeCharts(
+        CKYTable<std::vector<bool> > & allowed,
+        CKYTable<std::vector<double> > & inside,
+        CKYTable<std::vector<double> > & outside,
+        int cur_level) const;
+
+    void setInsideScoresByLexicon(
+        const CKYTable<std::vector<bool> > & allowed,
+        CKYTable<std::vector<double> > & inside,
+        const std::vector<int> & wid_list,
+        int cur_level) const;
+
+    void calculateInsideScores(
+        const CKYTable<std::vector<bool> > & allowed,
+        CKYTable<std::vector<double> > & inside,
+        int cur_level) const;
+
+    void calculateOutsideScores(
+        const CKYTable<std::vector<bool> > & allowed,
+        const CKYTable<std::vector<double> > & inside,
+        CKYTable<std::vector<double> > & outside,
+        int cur_level) const;
+
+    void pruneCharts(
+        CKYTable<std::vector<bool> > & allowed,
+        const CKYTable<std::vector<double> > & inside,
+        const CKYTable<std::vector<double> > & outside,
+        int cur_level,
+        double threshold) const;
 
 }; // struct Model
 

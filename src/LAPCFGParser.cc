@@ -1,11 +1,9 @@
 #include "LAPCFGParser.h"
 
-#include "CKYTable.h"
 #include "Mapping.h"
 #include "ModelProjector.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/multi_array.hpp>
 
 #include <algorithm>
 #include <cstdio>
@@ -106,7 +104,7 @@ void LAPCFGParser::loadGrammar(const string & path) {
 }
 
 void LAPCFGParser::generateCoarseModels() {
-    int depth = tag_set_->getDepth();
+    const int depth = tag_set_->getDepth();
 
     for (int level = depth-2; level >= 0; --level) {
         cerr << "Generating coarse model (level=" << level << ") ..." << endl;
@@ -118,377 +116,55 @@ void LAPCFGParser::generateCoarseModels() {
 }
 
 shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) const {
-    int num_words = sentence.size();
-    int num_tags = tag_set_->numTags();
-    int depth = tag_set_->getDepth();
-    int root_tag = tag_set_->getTagId("ROOT");
-    double prune_threshold = 1e-5;
-    //boost::array<int, 3> shape_cky = {{ num_words, num_words + 1, num_tags }};
+    const int num_words = sentence.size();
+    const int num_tags = tag_set_->numTags();
+    const int depth = tag_set_->getDepth();
+    const int root_tag = tag_set_->getTagId("ROOT");
+    const double prune_threshold = 1e-5;
 
     // check empty sentence
     if (num_words == 0) {
         return getDefaultParse();
     }
 
-    // convert words into ID
-    vector<int> wid_list(num_words);
-    cerr << "  WID:";
-    for (int i = 0; i < num_words; ++i) {
-        wid_list[i] = word_table_->getId(sentence[i]);
-        cerr << " " << wid_list[i];
-    }
-    cerr << endl;
+    vector<int> wid_list = makeWordIDList(sentence);
 
-    // pre-parsing
-
-    //boost::multi_array<vector<bool>, 3> allowed(shape_cky);
-    //boost::multi_array<vector<double>, 3> inside(shape_cky);
-    //boost::multi_array<vector<double>, 3> outside(shape_cky);
     CKYTable<vector<bool> > allowed(num_words, num_tags);
     CKYTable<vector<double> > inside(num_words, num_tags);
     CKYTable<vector<double> > outside(num_words, num_tags);
     
+    // pre-parsing
+
     for (int level = 0; level < depth; ++level) {
-        const Lexicon & cur_lexicon = *(lexicon_[level]);
-        const Grammar & cur_grammar = *(grammar_[level]);
-
-        unique_ptr<Mapping> mapping(nullptr);
-        if (level > 0) {
-            mapping.reset(new Mapping(*tag_set_, level - 1, level));
-        }
-
-        // initialize arrays
-
-        for (int begin = 0; begin < num_words; ++begin) {
-            for (int end = begin + 1; end <= num_words; ++end) {
-                for (int tag = 0; tag < num_tags; ++tag) {
-                    int num_subtags_fine = tag_set_->numSubtags(tag, level);
-                    inside.at(begin, end, tag).assign(num_subtags_fine, 0.0);
-                    outside.at(begin, end, tag).assign(num_subtags_fine, 0.0);
-                    if (level > 0) {
-                        // initialize subtag constraints
-                        int num_subtags_coarse = tag_set_->numSubtags(tag, level - 1);
-                        vector<bool> & allowed_fine = allowed.at(begin, end, tag);
-                        vector<bool> allowed_coarse = allowed_fine;
-                        allowed_fine.assign(num_subtags_fine, false);
-                        for (int subtag_coarse = 0; subtag_coarse < num_subtags_coarse; ++subtag_coarse) {
-                            if (!allowed_coarse[subtag_coarse]) continue;
-                            for (int subtag_fine : mapping->getCoarseToFineMaps(tag, subtag_coarse)) {
-                                allowed_fine[subtag_fine] = true;
-                            }
-                        }
-                    } else {
-                        // only 1 subtag is possible for the first time
-                        allowed.at(begin, end, tag).assign(num_subtags_fine, true);
-                    }
-                }
-            }
-        }
-
-        // initialize inside scores of leaves
-
-        for (int begin = 0; begin < num_words; ++begin) {
-            int end = begin + 1;
-            int wid = wid_list[begin];
-            
-            for (int tag = 0; tag < num_tags; ++tag) {
-                const LexiconEntry * ent_word = cur_lexicon.getEntry(tag, wid);
-                const LexiconEntry * ent_unk = cur_lexicon.getEntry(tag, -1);
-                if (!ent_word && !ent_unk) continue;
-                int num_sub = tag_set_->numSubtags(tag, level);
-                
-                for (int sub = 0; sub < num_sub; ++sub) {
-                    if (!allowed.at(begin, end, tag)[sub]) continue;
-                    inside.at(begin, end, tag)[sub] =
-                        (1.0 - smooth_unklex_) * (ent_word ? ent_word->getScore(sub) : 0.0) +
-                        smooth_unklex_ * (ent_unk ? ent_unk->getScore(sub) : 0.0);
-                    //cerr << begin << "(" << sentence[begin] << ")->"
-                    //    << tag_set_->getTagName(tag) << "[" << sub << "] = "
-                    //    << inside.at(begin, end, tag)[sub] << endl;
-                }
-            }
-        }
-
-        // calculate inside scores
-
-        for (int len = 1; len <= num_words; ++len) {
-            for (int begin = 0; begin < num_words - len + 1; ++begin) {
-                int end = begin + len;
-
-                // process binary rules
-
-                if (len > 1) {
-                    for (int ptag = 0; ptag < num_tags; ++ptag) {
-                        auto & binary_rules_p = cur_grammar.getBinaryRuleListByPLR()[ptag];
-                        int num_psub = tag_set_->numSubtags(ptag, level);
-                    
-                        for (int psub = 0; psub < num_psub; ++psub) {
-                            if (!allowed.at(begin, end, ptag)[psub]) continue;
-                            double sum = 0.0;
-
-                            for (int mid = begin + 1; mid < end; ++mid) {
-
-                                for (int ltag = 0; ltag < num_tags; ++ltag) {
-                                    auto & binary_rules_pl = binary_rules_p[ltag];
-                                    int num_lsub = tag_set_->numSubtags(ltag, level);
-                            
-                                    for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                        if (!allowed.at(begin, mid, ltag)[lsub]) continue;
-                                    
-                                        for (const BinaryRule * rule : binary_rules_pl) {
-                                            int rtag = rule->right();
-                                            int num_rsub = tag_set_->numSubtags(rtag, level);
-                                            auto & score_list = rule->getScoreList();
-                                            if (score_list[psub][lsub].empty()) continue;
-                                
-                                            for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                                if (!allowed.at(mid, end, rtag)[rsub]) continue;
-                                        
-                                                sum +=
-                                                    score_list[psub][lsub][rsub] *
-                                                    inside.at(begin, mid, ltag)[lsub] *
-                                                    inside.at(mid, end, rtag)[rsub];
-                                            }
-                                        }
-                                    }
-                                }
-                            } // mid
-
-                            inside.at(begin, end, ptag)[psub] = sum;
-
-                        } // psub
-                    } // ptag
-                } // len > 1
-
-                // process unary rules
-
-                vector<vector<double> > delta_unary(num_tags);
-
-                for (int ptag = 0; ptag < num_tags; ++ptag) {
-                    auto & unary_rules_p = cur_grammar.getUnaryRuleListByPC()[ptag];
-                    int num_psub = tag_set_->numSubtags(ptag, level);
-                    delta_unary[ptag].assign(num_psub, 0.0);
-                    
-                    for (int psub = 0; psub < num_psub; ++psub) {
-                        if (!allowed.at(begin, end, ptag)[psub]) continue;
-
-                        for (const UnaryRule * rule : unary_rules_p) {
-                            int ctag = rule->child();
-                            if (ctag == ptag) continue;
-                            int num_csub = tag_set_->numSubtags(ctag, level);
-                            auto & score_list = rule->getScoreList();
-                            
-                            for (int csub = 0; csub < num_csub; ++csub) {
-                                if (!allowed.at(begin, end, ctag)[csub]) continue;
-                                delta_unary[ptag][psub] +=
-                                    score_list[psub][csub] *
-                                    inside.at(begin, end, ctag)[csub];
-                            }
-                        }
-                    }
-                }
-
-                for (int ptag = 0; ptag < num_tags; ++ptag) {
-                    int num_psub = tag_set_->numSubtags(ptag, level);
-                    for (int psub = 0; psub < num_psub; ++psub) {
-                        if (!allowed.at(begin, end, ptag)[psub]) continue;
-                        inside.at(begin, end, ptag)[psub] += delta_unary[ptag][psub];
-                    }
-                }
-
-                /*
-                double best_score = -1;
-                int best_ptag = -1;
-                int best_psub = -1;
-                for (int ptag = 0; ptag < num_tags; ++ptag) {
-                    int num_psub = tag_set_->numSubtags(ptag, level);
-                    for (int psub = 0; psub < num_psub; ++psub) {
-                        if (inside.at(begin, end, ptag)[psub] > best_score) {
-                            best_score = inside.at(begin, end, ptag)[psub];
-                            best_ptag = ptag;
-                            best_psub = psub;
-                        }
-                    }
-                }
-
-                fprintf(stderr, "best[%d:%d] ... %s[%d] = %e\n",
-                    begin, end, tag_set_->getTagName(best_ptag).c_str(), best_psub, best_score);
-                */
-            } // begin
-        } // len
+        initializeCharts(allowed, inside, outside, level);
+        setInsideScoresByLexicon(allowed, inside, wid_list, level);
+        calculateInsideScores(allowed, inside, level);
 
         // check if all possible parses are pruned
-
         double sentence_score = inside.at(0, num_words, root_tag)[0];
         if (sentence_score == 0.0) {
             cerr << "**** No any possible parses! ****" << endl;
             return getDefaultParse();
         }
-        
-        // initialize outside scores of root
 
-        outside.at(0, num_words, root_tag)[0] = 1.0;
+        calculateOutsideScores(allowed, inside, outside, level);
+        pruneCharts(allowed, inside, outside, level, prune_threshold);
 
-        // calculate outside scores
-
-        for (int len = num_words; len >= 1; --len) {
-            for (int begin = 0; begin < num_words - len + 1; ++begin) {
-                int end = begin + len;
-
-                // process unary rules
-
-                vector<vector<double> > delta_unary(num_tags);
-
-                for (int ctag = 0; ctag < num_tags; ++ctag) {
-                    auto & unary_rules_c = cur_grammar.getUnaryRuleListByCP()[ctag];
-                    int num_csub = tag_set_->numSubtags(ctag, level);
-                    delta_unary[ctag].assign(num_csub, 0.0);
-
-                    for (int csub = 0; csub < num_csub; ++csub) {
-                        if (!allowed.at(begin, end, ctag)[csub]) continue;
-                        
-                        for (const UnaryRule * rule : unary_rules_c) {
-                            int ptag = rule->parent();
-                            if (ptag == ctag) continue;
-                            int num_psub = tag_set_->numSubtags(ptag, level);
-                            auto & score_list = rule->getScoreList();
-
-                            for (int psub = 0; psub < num_psub; ++psub) {
-                                if (!allowed.at(begin, end, ptag)[psub]) continue;
-                                delta_unary[ctag][csub] +=
-                                    score_list[psub][csub] *
-                                    outside.at(begin, end, ptag)[psub];
-                            }
-                        }
-                    }
-                }
-
-                for (int ctag = 0; ctag < num_tags; ++ctag) {
-                    int num_csub = tag_set_->numSubtags(ctag, level);
-                    for (int csub = 0; csub < num_csub; ++csub) {
-                        outside.at(begin, end, ctag)[csub] += delta_unary[ctag][csub];
-                    }
-                }
-
-                // process binary rules
-
-                if (len > 1) {
-                    for (int ptag = 0; ptag < num_tags; ++ptag) {
-                        auto binary_rules_p = cur_grammar.getBinaryRuleListByPLR()[ptag];
-                        int num_psub = tag_set_->numSubtags(ptag, level);
-
-                        for (int psub = 0; psub < num_psub; ++psub) {
-                            if (!allowed.at(begin, end, ptag)[psub]) continue;
-
-                            for (int mid = begin + 1; mid < end; ++mid) {
-                                
-                                for (int ltag = 0; ltag < num_tags; ++ltag) {
-                                    auto & binary_rules_pl = binary_rules_p[ltag];
-                                    int num_lsub = tag_set_->numSubtags(ltag, level);
-
-                                    for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                        if (!allowed.at(begin, mid, ltag)[lsub]) continue;
-
-                                        for (const BinaryRule * rule : binary_rules_pl) {
-                                            int rtag = rule->right();
-                                            int num_rsub = tag_set_->numSubtags(rtag, level);
-                                            auto & score_list = rule->getScoreList();
-                                            if (score_list[psub][lsub].empty()) continue;
-
-                                            for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                                if (!allowed.at(mid, end, rtag)[rsub]) continue;
-
-                                                double rule_score = score_list[psub][lsub][rsub];
-                                                double parent_score = outside.at(begin, end, ptag)[psub];
-                                                outside.at(begin, mid, ltag)[lsub] +=
-                                                    rule_score * parent_score *
-                                                    inside.at(mid, end, rtag)[rsub];
-                                                outside.at(mid, end, rtag)[rsub] +=
-                                                    rule_score * parent_score *
-                                                    inside.at(begin, mid, ltag)[lsub];
-                                            }
-                                        }
-                                    } // lsub
-                                } // ltag
-                            } // mid
-                        } // psub
-                    } // ptag
-                } // len > 1
-
-                /*
-                for (int ctag = 0; ctag < num_tags; ++ctag) {
-                    int num_csub = tag_set_->numSubtags(ctag, level);
-                    for (int csub = 0; csub < num_csub; ++csub) {
-                        cerr << begin << "-" << end << ": " <<
-                            "" << tag_set_->getTagName(ctag) << "[" << csub << "] =" <<
-                            outside.at(begin, end, ctag)[csub] << endl;
-                    }
-                }
-                */
-            } // begin
-        } // len
-
-        // pruning
-
-        //int num_pruned = 0;
-
-        for (int len = 1; len <= num_words; ++len) {
-            for (int begin = 0; begin < num_words - len + 1; ++begin) {
-                int end = begin + len;
-
-                //double best_score = -1;
-                //int best_ptag = -1;
-                //int best_psub = -1;
-
-                for (int ptag = 0; ptag < num_tags; ++ptag) {
-                    int num_psub = tag_set_->numSubtags(ptag, level);
-
-                    for (int psub = 0; psub < num_psub; ++psub) {
-                        double posterior =
-                            inside.at(begin, end, ptag)[psub] *
-                            outside.at(begin, end, ptag)[psub] /
-                            sentence_score;
-                        if (posterior < prune_threshold) {
-                            allowed.at(begin, end, ptag)[psub] = false;
-                            //++num_pruned;
-                        }
-
-                        //if (score > best_score) {
-                        //    best_score = score;
-                        //    best_ptag = ptag;
-                        //    best_psub = psub;
-                        //}
-                    }
-                }
-
-                //fprintf(stderr, "best[%d:%d] ... %s[%d] = %e\n",
-                //    begin, end, tag_set_->getTagName(best_ptag).c_str(), best_psub, best_score);
-                
-            } // begin
-        } // len
-
-        //cerr << "pruned: " << num_pruned << endl;
- 
         //fprintf(stderr, "pre-parse %d ... ROOT: %e\n", level, inside[0][num_words][root_tag][0]);
     } // level
 
     // retrieve max-rule parse over allowed nodes
     
-    //boost::multi_array<double, 3> maxc_log_score(shape_cky); // log-likelihood
-    //boost::multi_array<int, 3> maxc_left(shape_cky); // for binary derivation
-    //boost::multi_array<int, 3> maxc_right(shape_cky); // for binary derivation
-    //boost::multi_array<int, 3> maxc_mid(shape_cky); // for binary derivation
-    //boost::multi_array<int, 3> maxc_child(shape_cky); // for unary derivation
     CKYTable<double> maxc_log_score(num_words, num_tags);
     CKYTable<int> maxc_left(num_words, num_tags);
     CKYTable<int> maxc_right(num_words, num_tags);
     CKYTable<int> maxc_mid(num_words, num_tags);
     CKYTable<int> maxc_child(num_words, num_tags);
-    double log_normalizer = log(inside.at(0, num_words, root_tag)[0]);
-    double NEG_INFTY = -1e20;
-    int fine_level = depth - 1;
-    Lexicon & fine_lexicon = *(lexicon_[fine_level]);
-    Grammar & fine_grammar = *(grammar_[fine_level]);
+    const double log_normalizer = log(inside.at(0, num_words, root_tag)[0]);
+    const double NEG_INFTY = -1e20;
+    const int fine_level = depth - 1;
+    const Lexicon & fine_lexicon = *(lexicon_[fine_level]);
+    const Grammar & fine_grammar = *(grammar_[fine_level]);
 
     for (int len = 1; len <= num_words; ++len) {
         for (int begin = 0; begin < num_words - len + 1; ++begin) {
@@ -745,6 +421,371 @@ void LAPCFGParser::setUNKLexiconSmoothing(double value) {
 
 shared_ptr<Tree<string> > LAPCFGParser::getDefaultParse() const {
     return shared_ptr<Tree<string> >(new Tree<string>(""));
+}
+
+vector<int> LAPCFGParser::makeWordIDList(const vector<string> & sentence) const {
+    const int num_words = sentence.size();
+    vector<int> wid_list(num_words);
+    //cerr << "  WID:";
+    for (int i = 0; i < num_words; ++i) {
+        wid_list[i] = word_table_->getId(sentence[i]);
+        //cerr << " " << wid_list[i];
+    }
+    //cerr << endl;
+    return wid_list;
+}
+
+void LAPCFGParser::initializeCharts(
+    CKYTable<vector<bool> > & allowed,
+    CKYTable<vector<double> > & inside,
+    CKYTable<vector<double> > & outside,
+    int cur_level) const {
+
+    const int num_words = allowed.numWords();
+    const int num_tags = allowed.numTags();
+   
+    unique_ptr<Mapping> mapping(nullptr);
+    if (cur_level > 0) {
+        mapping.reset(new Mapping(*tag_set_, cur_level - 1, cur_level));
+    }
+
+    for (int begin = 0; begin < num_words; ++begin) {
+        for (int end = begin + 1; end <= num_words; ++end) {
+            for (int tag = 0; tag < num_tags; ++tag) {
+                int num_subtags_fine = tag_set_->numSubtags(tag, cur_level);
+                inside.at(begin, end, tag).assign(num_subtags_fine, 0.0);
+                outside.at(begin, end, tag).assign(num_subtags_fine, 0.0);
+                if (cur_level > 0) {
+                    // initialize subtag constraints
+                    int num_subtags_coarse = tag_set_->numSubtags(tag, cur_level - 1);
+                    vector<bool> & allowed_fine = allowed.at(begin, end, tag);
+                    vector<bool> allowed_coarse = allowed_fine;
+                    allowed_fine.assign(num_subtags_fine, false);
+                    for (int subtag_coarse = 0; subtag_coarse < num_subtags_coarse; ++subtag_coarse) {
+                        if (!allowed_coarse[subtag_coarse]) continue;
+                        for (int subtag_fine : mapping->getCoarseToFineMaps(tag, subtag_coarse)) {
+                            allowed_fine[subtag_fine] = true;
+                        }
+                    }
+                } else {
+                    // only 1 subtag is possible for the first time
+                    allowed.at(begin, end, tag).assign(num_subtags_fine, true);
+                }
+            }
+        }
+    }
+}
+
+void LAPCFGParser::setInsideScoresByLexicon(
+    const CKYTable<vector<bool> > & allowed,
+    CKYTable<vector<double> > & inside,
+    const vector<int> & wid_list,
+    int cur_level) const {
+
+    const int num_words = allowed.numWords();
+    const int num_tags = allowed.numTags();
+    const Lexicon & cur_lexicon = *(lexicon_[cur_level]);
+
+    for (int begin = 0; begin < num_words; ++begin) {
+        int end = begin + 1;
+        int wid = wid_list[begin];
+        
+        for (int tag = 0; tag < num_tags; ++tag) {
+            const LexiconEntry * ent_word = cur_lexicon.getEntry(tag, wid);
+            const LexiconEntry * ent_unk = cur_lexicon.getEntry(tag, -1);
+            if (!ent_word && !ent_unk) continue;
+            int num_sub = tag_set_->numSubtags(tag, cur_level);
+            
+            for (int sub = 0; sub < num_sub; ++sub) {
+                if (!allowed.at(begin, end, tag)[sub]) continue;
+                inside.at(begin, end, tag)[sub] =
+                    (1.0 - smooth_unklex_) * (ent_word ? ent_word->getScore(sub) : 0.0) +
+                    smooth_unklex_ * (ent_unk ? ent_unk->getScore(sub) : 0.0);
+                //cerr << begin << "(" << sentence[begin] << ")->"
+                //    << tag_set_->getTagName(tag) << "[" << sub << "] = "
+                //    << inside.at(begin, end, tag)[sub] << endl;
+            }
+        }
+    }
+}
+
+void LAPCFGParser::calculateInsideScores(
+    const CKYTable<vector<bool> > & allowed,
+    CKYTable<vector<double> > & inside,
+    int cur_level) const {
+
+    const int num_words = allowed.numWords();
+    const int num_tags = allowed.numTags();
+    const Grammar & cur_grammar = *(grammar_[cur_level]);
+
+    for (int len = 1; len <= num_words; ++len) {
+        for (int begin = 0; begin < num_words - len + 1; ++begin) {
+            int end = begin + len;
+
+            // process binary rules
+
+            if (len > 1) {
+                for (int ptag = 0; ptag < num_tags; ++ptag) {
+                    auto & binary_rules_p = cur_grammar.getBinaryRuleListByPLR()[ptag];
+                    int num_psub = tag_set_->numSubtags(ptag, cur_level);
+                
+                    for (int psub = 0; psub < num_psub; ++psub) {
+                        if (!allowed.at(begin, end, ptag)[psub]) continue;
+                        double sum = 0.0;
+
+                        for (int mid = begin + 1; mid < end; ++mid) {
+
+                            for (int ltag = 0; ltag < num_tags; ++ltag) {
+                                auto & binary_rules_pl = binary_rules_p[ltag];
+                                int num_lsub = tag_set_->numSubtags(ltag, cur_level);
+                        
+                                for (int lsub = 0; lsub < num_lsub; ++lsub) {
+                                    if (!allowed.at(begin, mid, ltag)[lsub]) continue;
+                                
+                                    for (const BinaryRule * rule : binary_rules_pl) {
+                                        int rtag = rule->right();
+                                        int num_rsub = tag_set_->numSubtags(rtag, cur_level);
+                                        auto & score_list = rule->getScoreList();
+                                        if (score_list[psub][lsub].empty()) continue;
+                            
+                                        for (int rsub = 0; rsub < num_rsub; ++rsub) {
+                                            if (!allowed.at(mid, end, rtag)[rsub]) continue;
+                                    
+                                            sum +=
+                                                score_list[psub][lsub][rsub] *
+                                                inside.at(begin, mid, ltag)[lsub] *
+                                                inside.at(mid, end, rtag)[rsub];
+                                        }
+                                    }
+                                }
+                            }
+                        } // mid
+
+                        inside.at(begin, end, ptag)[psub] = sum;
+
+                    } // psub
+                } // ptag
+            } // len > 1
+
+            // process unary rules
+
+            vector<vector<double> > delta_unary(num_tags);
+
+            for (int ptag = 0; ptag < num_tags; ++ptag) {
+                auto & unary_rules_p = cur_grammar.getUnaryRuleListByPC()[ptag];
+                int num_psub = tag_set_->numSubtags(ptag, cur_level);
+                delta_unary[ptag].assign(num_psub, 0.0);
+                
+                for (int psub = 0; psub < num_psub; ++psub) {
+                    if (!allowed.at(begin, end, ptag)[psub]) continue;
+
+                    for (const UnaryRule * rule : unary_rules_p) {
+                        int ctag = rule->child();
+                        if (ctag == ptag) continue;
+                        int num_csub = tag_set_->numSubtags(ctag, cur_level);
+                        auto & score_list = rule->getScoreList();
+                        
+                        for (int csub = 0; csub < num_csub; ++csub) {
+                            if (!allowed.at(begin, end, ctag)[csub]) continue;
+                            delta_unary[ptag][psub] +=
+                                score_list[psub][csub] *
+                                inside.at(begin, end, ctag)[csub];
+                        }
+                    }
+                }
+            }
+
+            for (int ptag = 0; ptag < num_tags; ++ptag) {
+                int num_psub = tag_set_->numSubtags(ptag, cur_level);
+                for (int psub = 0; psub < num_psub; ++psub) {
+                    if (!allowed.at(begin, end, ptag)[psub]) continue;
+                    inside.at(begin, end, ptag)[psub] += delta_unary[ptag][psub];
+                }
+            }
+
+            /*
+            double best_score = -1;
+            int best_ptag = -1;
+            int best_psub = -1;
+            for (int ptag = 0; ptag < num_tags; ++ptag) {
+                int num_psub = tag_set_->numSubtags(ptag, level);
+                for (int psub = 0; psub < num_psub; ++psub) {
+                    if (inside.at(begin, end, ptag)[psub] > best_score) {
+                        best_score = inside.at(begin, end, ptag)[psub];
+                        best_ptag = ptag;
+                        best_psub = psub;
+                    }
+                }
+            }
+
+            fprintf(stderr, "best[%d:%d] ... %s[%d] = %e\n",
+                begin, end, tag_set_->getTagName(best_ptag).c_str(), best_psub, best_score);
+            */
+        } // begin
+    } // len
+}
+
+void LAPCFGParser::calculateOutsideScores(
+    const CKYTable<vector<bool> > & allowed,
+    const CKYTable<vector<double> > & inside,
+    CKYTable<vector<double> > & outside,
+    int cur_level) const {
+
+    const int num_words = allowed.numWords();
+    const int num_tags = allowed.numTags();
+    const int root_tag = tag_set_->getTagId("ROOT");
+    const Grammar & cur_grammar = *(grammar_[cur_level]);
+
+    outside.at(0, num_words, root_tag)[0] = 1.0;
+
+    for (int len = num_words; len >= 1; --len) {
+        for (int begin = 0; begin < num_words - len + 1; ++begin) {
+            int end = begin + len;
+
+            // process unary rules
+
+            vector<vector<double> > delta_unary(num_tags);
+
+            for (int ctag = 0; ctag < num_tags; ++ctag) {
+                auto & unary_rules_c = cur_grammar.getUnaryRuleListByCP()[ctag];
+                int num_csub = tag_set_->numSubtags(ctag, cur_level);
+                delta_unary[ctag].assign(num_csub, 0.0);
+
+                for (int csub = 0; csub < num_csub; ++csub) {
+                    if (!allowed.at(begin, end, ctag)[csub]) continue;
+                    
+                    for (const UnaryRule * rule : unary_rules_c) {
+                        int ptag = rule->parent();
+                        if (ptag == ctag) continue;
+                        int num_psub = tag_set_->numSubtags(ptag, cur_level);
+                        auto & score_list = rule->getScoreList();
+
+                        for (int psub = 0; psub < num_psub; ++psub) {
+                            if (!allowed.at(begin, end, ptag)[psub]) continue;
+                            delta_unary[ctag][csub] +=
+                                score_list[psub][csub] *
+                                outside.at(begin, end, ptag)[psub];
+                        }
+                    }
+                }
+            }
+
+            for (int ctag = 0; ctag < num_tags; ++ctag) {
+                int num_csub = tag_set_->numSubtags(ctag, cur_level);
+                for (int csub = 0; csub < num_csub; ++csub) {
+                    outside.at(begin, end, ctag)[csub] += delta_unary[ctag][csub];
+                }
+            }
+
+            // process binary rules
+
+            if (len > 1) {
+                for (int ptag = 0; ptag < num_tags; ++ptag) {
+                    auto binary_rules_p = cur_grammar.getBinaryRuleListByPLR()[ptag];
+                    int num_psub = tag_set_->numSubtags(ptag, cur_level);
+
+                    for (int psub = 0; psub < num_psub; ++psub) {
+                        if (!allowed.at(begin, end, ptag)[psub]) continue;
+
+                        for (int mid = begin + 1; mid < end; ++mid) {
+                            
+                            for (int ltag = 0; ltag < num_tags; ++ltag) {
+                                auto & binary_rules_pl = binary_rules_p[ltag];
+                                int num_lsub = tag_set_->numSubtags(ltag, cur_level);
+
+                                for (int lsub = 0; lsub < num_lsub; ++lsub) {
+                                    if (!allowed.at(begin, mid, ltag)[lsub]) continue;
+
+                                    for (const BinaryRule * rule : binary_rules_pl) {
+                                        int rtag = rule->right();
+                                        int num_rsub = tag_set_->numSubtags(rtag, cur_level);
+                                        auto & score_list = rule->getScoreList();
+                                        if (score_list[psub][lsub].empty()) continue;
+
+                                        for (int rsub = 0; rsub < num_rsub; ++rsub) {
+                                            if (!allowed.at(mid, end, rtag)[rsub]) continue;
+
+                                            double rule_score = score_list[psub][lsub][rsub];
+                                            double parent_score = outside.at(begin, end, ptag)[psub];
+                                            outside.at(begin, mid, ltag)[lsub] +=
+                                                rule_score * parent_score *
+                                                inside.at(mid, end, rtag)[rsub];
+                                            outside.at(mid, end, rtag)[rsub] +=
+                                                rule_score * parent_score *
+                                                inside.at(begin, mid, ltag)[lsub];
+                                        }
+                                    }
+                                } // lsub
+                            } // ltag
+                        } // mid
+                    } // psub
+                } // ptag
+            } // len > 1
+
+            /*
+            for (int ctag = 0; ctag < num_tags; ++ctag) {
+                int num_csub = tag_set_->numSubtags(ctag, level);
+                for (int csub = 0; csub < num_csub; ++csub) {
+                    cerr << begin << "-" << end << ": " <<
+                        "" << tag_set_->getTagName(ctag) << "[" << csub << "] =" <<
+                        outside.at(begin, end, ctag)[csub] << endl;
+                }
+            }
+            */
+        } // begin
+    } // len
+}
+
+void LAPCFGParser::pruneCharts(
+    CKYTable<vector<bool> > & allowed,
+    const CKYTable<vector<double> > & inside,
+    const CKYTable<vector<double> > & outside,
+    int cur_level,
+    double threshold) const {
+    
+    const int num_words = allowed.numWords();
+    const int num_tags = allowed.numTags();
+    const int root_tag = tag_set_->getTagId("ROOT");
+    //int num_pruned = 0;
+
+    const double sentence_score = inside.at(0, num_words, root_tag)[0];
+
+    for (int len = 1; len <= num_words; ++len) {
+        for (int begin = 0; begin < num_words - len + 1; ++begin) {
+            int end = begin + len;
+
+            //double best_score = -1;
+            //int best_ptag = -1;
+            //int best_psub = -1;
+
+            for (int ptag = 0; ptag < num_tags; ++ptag) {
+                int num_psub = tag_set_->numSubtags(ptag, cur_level);
+
+                for (int psub = 0; psub < num_psub; ++psub) {
+                    double posterior =
+                        inside.at(begin, end, ptag)[psub] *
+                        outside.at(begin, end, ptag)[psub] /
+                        sentence_score;
+                    if (posterior < threshold) {
+                        allowed.at(begin, end, ptag)[psub] = false;
+                        //++num_pruned;
+                    }
+
+                    //if (score > best_score) {
+                    //    best_score = score;
+                    //    best_ptag = ptag;
+                    //    best_psub = psub;
+                    //}
+                }
+            }
+
+            //fprintf(stderr, "best[%d:%d] ... %s[%d] = %e\n",
+            //    begin, end, tag_set_->getTagName(best_ptag).c_str(), best_psub, best_score);
+            
+        } // begin
+    } // len
+
+    //cerr << "pruned: " << num_pruned << endl;
 }
 
 } // namespace AHCParser
