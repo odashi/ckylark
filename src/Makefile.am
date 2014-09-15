@@ -13,12 +13,15 @@ ahcparse_SOURCES = \
     LAPCFGParser.h \
     Lattice.cc \
     Lattice.h \
+    LatticeLoader.h \
     Lexicon.cc \
     Lexicon.h \
     Mapping.cc \
     Mapping.h \
     ModelProjector.cc \
     ModelProjector.h \
+    PLFLatticeLoader.cc \
+    PLFLatticeLoader.h \
     Rule.h \
     TagSet.cc \
     TagSet.h \
