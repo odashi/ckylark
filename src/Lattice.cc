@@ -12,6 +12,7 @@ Lattice::~Lattice() {}
 
 void Lattice::addEdge(size_t begin, size_t end, const Lattice::Edge & edge) {
     if (end <= begin) throw runtime_error("Lattice: invalid node ID");
+    end = getEndPos(begin, end);
 
     if (begin >= edge_list_.size()) {
         edge_list_.resize(begin + 1);
@@ -27,13 +28,18 @@ void Lattice::addEdge(size_t begin, size_t end, const Lattice::Edge & edge) {
     edge_list_[begin][end].push_back(edge);
 }
 
-const vector<Lattice::Edge> * Lattice::getEdgeList(size_t begin, size_t end) const {
+const vector<Lattice::Edge> & Lattice::getEdgeList(size_t begin, size_t end) const {
     if (end <= begin) throw runtime_error("Lattice: invalid node ID");
+    end = getEndPos(begin, end);
     
-    if (begin >= edge_list_.size()) return nullptr;
-    if (end >= edge_list_[begin].size()) return nullptr;
+    if (begin >= edge_list_.size()) return dummy_edge_list_;
+    if (end >= edge_list_[begin].size()) return dummy_edge_list_;
 
-    return &edge_list_[begin][end];
+    return edge_list_[begin][end];
+}
+
+size_t Lattice::getEndPos(size_t begin, size_t end) const {
+    return end - begin - 1;
 }
 
 } // namespace AHCParser

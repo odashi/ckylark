@@ -6,6 +6,10 @@
 
 namespace AHCParser {
 
+/*
+    this class treats only directed acyclic graph (DAG) shaped lattice.
+*/
+
 class Lattice {
 
     Lattice(const Lattice &) = delete;
@@ -22,12 +26,15 @@ public:
 
     void addEdge(size_t begin, size_t end, const Edge & edge);
 
-    const std::vector<Edge> * getEdgeList(size_t begin, size_t end) const;
+    const std::vector<Edge> & getEdgeList(size_t begin, size_t end) const;
 
     size_t numNodes() const { return edge_list_.size() + 1; }
 
 private:
     std::vector<std::vector<std::vector<Edge> > > edge_list_; // [begin][end]{word}
+    std::vector<Edge> dummy_edge_list_;
+
+    size_t getEndPos(size_t begin, size_t end) const;
 
 }; // class Lattice
 
