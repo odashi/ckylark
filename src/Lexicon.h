@@ -58,6 +58,8 @@ public:
 
     inline int getLevel() const { return level_; }
 
+    inline bool hasEntry(int tag_id) const { return !entry_[tag_id].empty(); };
+
 private:
     const TagSet & tag_set_;
     int level_;

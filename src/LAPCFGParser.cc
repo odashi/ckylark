@@ -184,6 +184,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                 // process binary rules
 
                 for (int ptag = 0; ptag < num_tags; ++ptag) {
+                    if (fine_lexicon.hasEntry(ptag)) continue; // semi-terminal
                     auto & binary_rules_p = fine_grammar.getBinaryRuleListByPLR()[ptag];
                     int num_psub = tag_set_->numSubtags(ptag, fine_level);
 
@@ -272,6 +273,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
             }
 
             for (int ptag = 0; ptag < num_tags; ++ptag) {
+                if (fine_lexicon.hasEntry(ptag)) continue; // semi-terminal
                 auto & unary_rules_p = fine_grammar.getUnaryRuleListByPC()[ptag];
                 int num_psub = tag_set_->numSubtags(ptag, fine_level);
                 
@@ -522,6 +524,7 @@ void LAPCFGParser::calculateInsideScores(
 
     const int num_words = allowed.numWords();
     const int num_tags = allowed.numTags();
+    const Lexicon & cur_lexicon = *(lexicon_[cur_level]);
     const Grammar & cur_grammar = *(grammar_[cur_level]);
 
     for (int len = 1; len <= num_words; ++len) {
@@ -532,6 +535,7 @@ void LAPCFGParser::calculateInsideScores(
 
             if (len > 1) {
                 for (int ptag = 0; ptag < num_tags; ++ptag) {
+                    if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
                     auto & binary_rules_p = cur_grammar.getBinaryRuleListByPLR()[ptag];
                     int num_psub = tag_set_->numSubtags(ptag, cur_level);
                 
@@ -578,6 +582,7 @@ void LAPCFGParser::calculateInsideScores(
             vector<vector<double> > delta_unary(num_tags);
 
             for (int ptag = 0; ptag < num_tags; ++ptag) {
+                if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
                 auto & unary_rules_p = cur_grammar.getUnaryRuleListByPC()[ptag];
                 int num_psub = tag_set_->numSubtags(ptag, cur_level);
                 delta_unary[ptag].assign(num_psub, 0.0);
@@ -602,6 +607,7 @@ void LAPCFGParser::calculateInsideScores(
             }
 
             for (int ptag = 0; ptag < num_tags; ++ptag) {
+                if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
                 int num_psub = tag_set_->numSubtags(ptag, cur_level);
                 for (int psub = 0; psub < num_psub; ++psub) {
                     if (!allowed.at(begin, end, ptag)[psub]) continue;
@@ -614,6 +620,7 @@ void LAPCFGParser::calculateInsideScores(
             int best_ptag = -1;
             int best_psub = -1;
             for (int ptag = 0; ptag < num_tags; ++ptag) {
+                if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
                 int num_psub = tag_set_->numSubtags(ptag, level);
                 for (int psub = 0; psub < num_psub; ++psub) {
                     if (inside.at(begin, end, ptag)[psub] > best_score) {
@@ -640,6 +647,7 @@ void LAPCFGParser::calculateOutsideScores(
     const int num_words = allowed.numWords();
     const int num_tags = allowed.numTags();
     const int root_tag = tag_set_->getTagId("ROOT");
+    const Lexicon & cur_lexicon = *(lexicon_[cur_level]);
     const Grammar & cur_grammar = *(grammar_[cur_level]);
 
     outside.at(0, num_words, root_tag)[0] = 1.0;
@@ -687,6 +695,7 @@ void LAPCFGParser::calculateOutsideScores(
 
             if (len > 1) {
                 for (int ptag = 0; ptag < num_tags; ++ptag) {
+                    if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
                     auto binary_rules_p = cur_grammar.getBinaryRuleListByPLR()[ptag];
                     int num_psub = tag_set_->numSubtags(ptag, cur_level);
 
@@ -760,32 +769,32 @@ void LAPCFGParser::pruneCharts(
             int end = begin + len;
 
             //double best_score = -1;
-            //int best_ptag = -1;
-            //int best_psub = -1;
+            //int best_tag = -1;
+            //int best_sub = -1;
 
-            for (int ptag = 0; ptag < num_tags; ++ptag) {
-                int num_psub = tag_set_->numSubtags(ptag, cur_level);
+            for (int tag = 0; tag < num_tags; ++tag) {
+                int num_sub = tag_set_->numSubtags(tag, cur_level);
 
-                for (int psub = 0; psub < num_psub; ++psub) {
+                for (int sub = 0; sub < num_sub; ++sub) {
                     double posterior =
-                        inside.at(begin, end, ptag)[psub] *
-                        outside.at(begin, end, ptag)[psub] /
+                        inside.at(begin, end, tag)[sub] *
+                        outside.at(begin, end, tag)[sub] /
                         sentence_score;
                     if (posterior < prune_threshold_) {
-                        allowed.at(begin, end, ptag)[psub] = false;
+                        allowed.at(begin, end, tag)[sub] = false;
                         //++num_pruned;
                     }
 
                     //if (score > best_score) {
                     //    best_score = score;
-                    //    best_ptag = ptag;
-                    //    best_psub = psub;
+                    //    best_tag = tag;
+                    //    best_sub = sub;
                     //}
                 }
             }
 
             //fprintf(stderr, "best[%d:%d] ... %s[%d] = %e\n",
-            //    begin, end, tag_set_->getTagName(best_ptag).c_str(), best_psub, best_score);
+            //    begin, end, tag_set_->getTagName(best_tag).c_str(), best_sub, best_score);
             
         } // begin
     } // len
