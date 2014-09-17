@@ -132,7 +132,11 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     CKYTable<vector<bool> > allowed(num_words, num_tags);
     CKYTable<vector<double> > inside(num_words, num_tags);
     CKYTable<vector<double> > outside(num_words, num_tags);
-    vector<vector<Extent> > extent(num_words + 1, vector<Extent>(num_tags, { -1, -1, -1, -1 }));
+    vector<vector<Extent> > extent(num_words + 1, vector<Extent>(num_tags, {
+        num_words + 1, // narrow_right
+        -1, // narrow_left
+        -1, // wide_right
+        num_words + 1 })); // wide_left
     
     // pre-parsing
 
@@ -487,14 +491,12 @@ void LAPCFGParser::initializeCharts(
             }
         }
 
-        if (cur_level == 0) {
-            int end2 = begin + 1;
-            for (int tag = 0; tag < num_tags; ++tag) {
-                extent[begin][tag].narrow_right = end2;
-                extent[begin][tag].wide_right = end2;
-                extent[end2][tag].narrow_left = begin;
-                extent[end2][tag].wide_left = begin;
-            }
+        int end2 = begin + 1;
+        for (int tag = 0; tag < num_tags; ++tag) {
+            extent[begin][tag].narrow_right = end2;
+            extent[begin][tag].wide_right = end2;
+            extent[end2][tag].narrow_left = begin;
+            extent[end2][tag].wide_left = begin;
         }
     }
 }
