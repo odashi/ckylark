@@ -200,10 +200,22 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                         for (const BinaryRule * rule : binary_rules_pl) {
                             auto & score_list = rule->getScoreList();
                             int rtag = rule->right();
+
+                            int min1 = extent[begin][ltag].narrow_right;
+                            if (min1 >= end) continue;
+                            int max1 = extent[end][rtag].narrow_left;
+                            if (max1 < min1) continue;
+                            int min2 = extent[end][rtag].wide_left;
+                            int min = min1 > min2 ? min1 : min2;
+                            if (min > max1) continue;
+                            int max2 = extent[begin][ltag].wide_right;
+                            int max = max1 < max2 ? max1 : max2;
+                            if (min > max) continue;
+
                             int num_rsub = tag_set_->numSubtags(rtag, fine_level);
                             double old_log_score = maxc_log_score.at(begin, end, ptag);
 
-                            for (int mid = begin + 1; mid < end; ++mid) {
+                            for (int mid = min; mid <= max; ++mid) {
                                 if (mid - begin > 1 && fine_lexicon.hasEntry(ltag)) continue; // semi-terminal
                                 if (end - mid > 1 && fine_lexicon.hasEntry(rtag)) continue; // semi-terminal
                                 double cur_log_score =
