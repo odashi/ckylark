@@ -573,6 +573,7 @@ void LAPCFGParser::calculateInsideScores(
                     if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
                     auto & binary_rules_p = cur_grammar.getBinaryRuleListByPLR()[ptag];
                     int num_psub = tag_set_->numSubtags(ptag, cur_level);
+                    bool changed = false;
                 
                     for (int psub = 0; psub < num_psub; ++psub) {
                         if (!allowed.at(begin, end, ptag)[psub]) continue;
@@ -611,11 +612,15 @@ void LAPCFGParser::calculateInsideScores(
                         
                                         for (int rsub = 0; rsub < num_rsub; ++rsub) {
                                             if (!allowed.at(mid, end, rtag)[rsub]) continue;
+
+                                            double rule_score = score_list_pl[rsub];
+                                            if (rule_score == 0.0) continue;
                                 
                                             sum +=
-                                                score_list_pl[rsub] *
+                                                rule_score *
                                                 inside.at(begin, mid, ltag)[lsub] *
                                                 inside.at(mid, end, rtag)[rsub];
+                                            changed = true;
                                         }
                                     }
                                 }
@@ -624,6 +629,8 @@ void LAPCFGParser::calculateInsideScores(
 
                         inside.at(begin, end, ptag)[psub] = sum;
                     } // psub
+
+                    if (!changed) continue;
 
                     if (begin > extent[end][ptag].narrow_left) {
                         extent[end][ptag].narrow_left = begin;
@@ -807,6 +814,8 @@ void LAPCFGParser::calculateOutsideScores(
                                             if (!allowed.at(mid, end, rtag)[rsub]) continue;
 
                                             double rule_score = score_list_pl[rsub];
+                                            if (rule_score == 0.0) continue;
+
                                             double parent_score = outside.at(begin, end, ptag)[psub];
                                             outside.at(begin, mid, ltag)[lsub] +=
                                                 rule_score * parent_score *
