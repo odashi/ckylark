@@ -199,6 +199,8 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                             double old_log_score = maxc_log_score.at(begin, end, ptag);
 
                             for (int mid = begin + 1; mid < end; ++mid) {
+                                if (mid - begin > 1 && fine_lexicon.hasEntry(ltag)) continue; // semi-terminal
+                                if (end - mid > 1 && fine_lexicon.hasEntry(rtag)) continue; // semi-terminal
                                 double cur_log_score =
                                     maxc_log_score.at(begin, mid, ltag) +
                                     maxc_log_score.at(mid, end, rtag);
@@ -279,6 +281,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                 
                 for (const UnaryRule * rule : unary_rules_p) {
                     int ctag = rule->child();
+                    if (len > 1 && fine_lexicon.hasEntry(ctag)) continue; // semi-terminal
                     if (ctag == ptag) continue;
                     auto & score_list = rule->getScoreList();
                     int num_csub = tag_set_->numSubtags(ctag, fine_level);
@@ -546,6 +549,7 @@ void LAPCFGParser::calculateInsideScores(
                         for (int mid = begin + 1; mid < end; ++mid) {
 
                             for (int ltag = 0; ltag < num_tags; ++ltag) {
+                                if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
                                 auto & binary_rules_pl = binary_rules_p[ltag];
                                 int num_lsub = tag_set_->numSubtags(ltag, cur_level);
                         
@@ -554,6 +558,7 @@ void LAPCFGParser::calculateInsideScores(
                                 
                                     for (const BinaryRule * rule : binary_rules_pl) {
                                         int rtag = rule->right();
+                                        if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
                                         int num_rsub = tag_set_->numSubtags(rtag, cur_level);
                                         auto & score_list = rule->getScoreList();
                                         if (score_list[psub][lsub].empty()) continue;
@@ -592,6 +597,7 @@ void LAPCFGParser::calculateInsideScores(
 
                     for (const UnaryRule * rule : unary_rules_p) {
                         int ctag = rule->child();
+                        if (len > 1 && cur_lexicon.hasEntry(ctag)) continue; // semi-terminal
                         if (ctag == ptag) continue;
                         int num_csub = tag_set_->numSubtags(ctag, cur_level);
                         auto & score_list = rule->getScoreList();
@@ -661,6 +667,7 @@ void LAPCFGParser::calculateOutsideScores(
             vector<vector<double> > delta_unary(num_tags);
 
             for (int ctag = 0; ctag < num_tags; ++ctag) {
+                if (len > 1 && cur_lexicon.hasEntry(ctag)) continue; // semi-terminal
                 auto & unary_rules_c = cur_grammar.getUnaryRuleListByCP()[ctag];
                 int num_csub = tag_set_->numSubtags(ctag, cur_level);
                 delta_unary[ctag].assign(num_csub, 0.0);
@@ -685,6 +692,7 @@ void LAPCFGParser::calculateOutsideScores(
             }
 
             for (int ctag = 0; ctag < num_tags; ++ctag) {
+                if (len > 1 && cur_lexicon.hasEntry(ctag)) continue; // semi-terminal
                 int num_csub = tag_set_->numSubtags(ctag, cur_level);
                 for (int csub = 0; csub < num_csub; ++csub) {
                     outside.at(begin, end, ctag)[csub] += delta_unary[ctag][csub];
@@ -705,6 +713,7 @@ void LAPCFGParser::calculateOutsideScores(
                         for (int mid = begin + 1; mid < end; ++mid) {
                             
                             for (int ltag = 0; ltag < num_tags; ++ltag) {
+                                if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
                                 auto & binary_rules_pl = binary_rules_p[ltag];
                                 int num_lsub = tag_set_->numSubtags(ltag, cur_level);
 
@@ -713,6 +722,7 @@ void LAPCFGParser::calculateOutsideScores(
 
                                     for (const BinaryRule * rule : binary_rules_pl) {
                                         int rtag = rule->right();
+                                        if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
                                         int num_rsub = tag_set_->numSubtags(rtag, cur_level);
                                         auto & score_list = rule->getScoreList();
                                         if (score_list[psub][lsub].empty()) continue;
