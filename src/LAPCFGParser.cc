@@ -487,12 +487,14 @@ void LAPCFGParser::initializeCharts(
             }
         }
 
-        int end2 = begin + 1;
-        for (int tag = 0; tag < num_tags; ++tag) {
-            extent[begin][tag].narrow_right = end2;
-            extent[begin][tag].wide_right = end2;
-            extent[end2][tag].narrow_left = begin;
-            extent[end2][tag].wide_left = begin;
+        if (cur_level == 0) {
+            int end2 = begin + 1;
+            for (int tag = 0; tag < num_tags; ++tag) {
+                extent[begin][tag].narrow_right = end2;
+                extent[begin][tag].wide_right = end2;
+                extent[end2][tag].narrow_left = begin;
+                extent[end2][tag].wide_left = begin;
+            }
         }
     }
 }
@@ -557,26 +559,38 @@ void LAPCFGParser::calculateInsideScores(
                         if (!allowed.at(begin, end, ptag)[psub]) continue;
                         double sum = 0.0;
 
-                        for (int mid = begin + 1; mid < end; ++mid) {
+                        for (int ltag = 0; ltag < num_tags; ++ltag) {
+                            auto & binary_rules_pl = binary_rules_p[ltag];
+                            int num_lsub = tag_set_->numSubtags(ltag, cur_level);
+                    
+                            for (const BinaryRule * rule : binary_rules_pl) {
+                                int rtag = rule->right();
 
-                            for (int ltag = 0; ltag < num_tags; ++ltag) {
-                                if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
-                                auto & binary_rules_pl = binary_rules_p[ltag];
-                                int num_lsub = tag_set_->numSubtags(ltag, cur_level);
-                        
-                                for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                    if (!allowed.at(begin, mid, ltag)[lsub]) continue;
+                                int min1 = extent[begin][ltag].narrow_right;
+                                if (min1 >= end) continue;
+                                int max1 = extent[end][rtag].narrow_left;
+                                if (max1 < min1) continue;
+                                int min2 = extent[end][rtag].wide_left;
+                                int min = min1 > min2 ? min1 : min2;
+                                if (min > max1) continue;
+                                int max2 = extent[begin][ltag].wide_right;
+                                int max = max1 < max2 ? max1 : max2;
+                                if (min > max) continue;
+
+                                int num_rsub = tag_set_->numSubtags(rtag, cur_level);
+                                auto & score_list = rule->getScoreList();
                                 
-                                    for (const BinaryRule * rule : binary_rules_pl) {
-                                        int rtag = rule->right();
-                                        if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
-                                        int num_rsub = tag_set_->numSubtags(rtag, cur_level);
-                                        auto & score_list = rule->getScoreList();
-                                        if (score_list[psub][lsub].empty()) continue;
+                                for (int mid = min; mid <= max; ++mid) {
+                                    if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
+                                    if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
                             
+                                    for (int lsub = 0; lsub < num_lsub; ++lsub) {
+                                        if (!allowed.at(begin, mid, ltag)[lsub]) continue;
+                                        if (score_list[psub][lsub].empty()) continue;
+                        
                                         for (int rsub = 0; rsub < num_rsub; ++rsub) {
                                             if (!allowed.at(mid, end, rtag)[rsub]) continue;
-                                    
+                                
                                             sum +=
                                                 score_list[psub][lsub][rsub] *
                                                 inside.at(begin, mid, ltag)[lsub] *
@@ -585,11 +599,23 @@ void LAPCFGParser::calculateInsideScores(
                                     }
                                 }
                             }
-                        } // mid
+                        }
 
                         inside.at(begin, end, ptag)[psub] = sum;
-
                     } // psub
+
+                    if (begin > extent[end][ptag].narrow_left) {
+                        extent[end][ptag].narrow_left = begin;
+                        extent[end][ptag].wide_left = begin;
+                    } else if (begin < extent[end][ptag].wide_left) {
+                        extent[end][ptag].wide_left = begin;
+                    }
+                    if (end < extent[begin][ptag].narrow_right) {
+                        extent[begin][ptag].narrow_right = end;
+                        extent[begin][ptag].wide_right = end;
+                    } else if (end > extent[begin][ptag].wide_right) {
+                        extent[begin][ptag].wide_right = end;
+                    }
                 } // ptag
             } // len > 1
 
@@ -722,21 +748,33 @@ void LAPCFGParser::calculateOutsideScores(
                     for (int psub = 0; psub < num_psub; ++psub) {
                         if (!allowed.at(begin, end, ptag)[psub]) continue;
 
-                        for (int mid = begin + 1; mid < end; ++mid) {
-                            
-                            for (int ltag = 0; ltag < num_tags; ++ltag) {
-                                if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
-                                auto & binary_rules_pl = binary_rules_p[ltag];
-                                int num_lsub = tag_set_->numSubtags(ltag, cur_level);
+                        for (int ltag = 0; ltag < num_tags; ++ltag) {
+                            auto & binary_rules_pl = binary_rules_p[ltag];
+                            int num_lsub = tag_set_->numSubtags(ltag, cur_level);
 
-                                for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                    if (!allowed.at(begin, mid, ltag)[lsub]) continue;
+                            for (const BinaryRule * rule : binary_rules_pl) {
+                                int rtag = rule->right();
 
-                                    for (const BinaryRule * rule : binary_rules_pl) {
-                                        int rtag = rule->right();
-                                        if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
-                                        int num_rsub = tag_set_->numSubtags(rtag, cur_level);
-                                        auto & score_list = rule->getScoreList();
+                                int min1 = extent[begin][ltag].narrow_right;
+                                if (min1 >= end) continue;
+                                int max1 = extent[end][rtag].narrow_left;
+                                if (max1 < min1) continue;
+                                int min2 = extent[end][rtag].wide_left;
+                                int min = min1 > min2 ? min1 : min2;
+                                if (min > max1) continue;
+                                int max2 = extent[begin][ltag].wide_right;
+                                int max = max1 < max2 ? max1 : max2;
+                                if (min > max) continue;
+
+                                int num_rsub = tag_set_->numSubtags(rtag, cur_level);
+                                auto & score_list = rule->getScoreList();
+
+                                for (int mid = begin + 1; mid < end; ++mid) {
+                                    if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
+                                    if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
+                        
+                                    for (int lsub = 0; lsub < num_lsub; ++lsub) {
+                                        if (!allowed.at(begin, mid, ltag)[lsub]) continue;
                                         if (score_list[psub][lsub].empty()) continue;
 
                                         for (int rsub = 0; rsub < num_rsub; ++rsub) {
@@ -752,9 +790,9 @@ void LAPCFGParser::calculateOutsideScores(
                                                 inside.at(begin, mid, ltag)[lsub];
                                         }
                                     }
-                                } // lsub
-                            } // ltag
-                        } // mid
+                                }
+                            }
+                        }
                     } // psub
                 } // ptag
             } // len > 1
