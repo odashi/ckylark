@@ -18,6 +18,13 @@ namespace AHCParser {
 
 class LAPCFGParser {
 
+    struct Extent {
+        int narrow_right;
+        int narrow_left;
+        int wide_right;
+        int wide_left;
+    }; // struct Extent
+
     LAPCFGParser();
     LAPCFGParser(const LAPCFGParser &) = delete;
 
@@ -62,6 +69,7 @@ private:
         CKYTable<std::vector<bool> > & allowed,
         CKYTable<std::vector<double> > & inside,
         CKYTable<std::vector<double> > & outside,
+        std::vector<std::vector<Extent> > & extent,
         int cur_level) const;
 
     void setInsideScoresByLexicon(
@@ -73,12 +81,14 @@ private:
     void calculateInsideScores(
         const CKYTable<std::vector<bool> > & allowed,
         CKYTable<std::vector<double> > & inside,
+        std::vector<std::vector<Extent> > & extent,
         int cur_level) const;
 
     void calculateOutsideScores(
         const CKYTable<std::vector<bool> > & allowed,
         const CKYTable<std::vector<double> > & inside,
         CKYTable<std::vector<double> > & outside,
+        std::vector<std::vector<Extent> > & extent,
         int cur_level) const;
 
     void pruneCharts(

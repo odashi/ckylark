@@ -132,13 +132,14 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     CKYTable<vector<bool> > allowed(num_words, num_tags);
     CKYTable<vector<double> > inside(num_words, num_tags);
     CKYTable<vector<double> > outside(num_words, num_tags);
+    vector<vector<Extent> > extent(num_words + 1, vector<Extent>(num_tags, { -1, -1, -1, -1 }));
     
     // pre-parsing
 
     for (int level = 0; level < depth; ++level) {
-        initializeCharts(allowed, inside, outside, level);
+        initializeCharts(allowed, inside, outside, extent, level);
         setInsideScoresByLexicon(allowed, inside, wid_list, level);
-        calculateInsideScores(allowed, inside, level);
+        calculateInsideScores(allowed, inside, extent, level);
 
         // check if all possible parses are pruned
         double sentence_score = inside.at(0, num_words, root_tag)[0];
@@ -147,7 +148,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
             return getDefaultParse();
         }
 
-        calculateOutsideScores(allowed, inside, outside, level);
+        calculateOutsideScores(allowed, inside, outside, extent, level);
         pruneCharts(allowed, inside, outside, level);
 
         //fprintf(stderr, "pre-parse %d ... ROOT: %e\n", level, inside[0][num_words][root_tag][0]);
@@ -450,6 +451,7 @@ void LAPCFGParser::initializeCharts(
     CKYTable<vector<bool> > & allowed,
     CKYTable<vector<double> > & inside,
     CKYTable<vector<double> > & outside,
+    vector<vector<Extent> > & extent,
     int cur_level) const {
 
     const int num_words = allowed.numWords();
@@ -483,6 +485,14 @@ void LAPCFGParser::initializeCharts(
                     allowed.at(begin, end, tag).assign(num_subtags_fine, true);
                 }
             }
+        }
+
+        int end2 = begin + 1;
+        for (int tag = 0; tag < num_tags; ++tag) {
+            extent[begin][tag].narrow_right = end2;
+            extent[begin][tag].wide_right = end2;
+            extent[end2][tag].narrow_left = begin;
+            extent[end2][tag].wide_left = begin;
         }
     }
 }
@@ -523,6 +533,7 @@ void LAPCFGParser::setInsideScoresByLexicon(
 void LAPCFGParser::calculateInsideScores(
     const CKYTable<vector<bool> > & allowed,
     CKYTable<vector<double> > & inside,
+    vector<vector<Extent> > & extent,
     int cur_level) const {
 
     const int num_words = allowed.numWords();
@@ -648,6 +659,7 @@ void LAPCFGParser::calculateOutsideScores(
     const CKYTable<vector<bool> > & allowed,
     const CKYTable<vector<double> > & inside,
     CKYTable<vector<double> > & outside,
+    vector<vector<Extent> > & extent,
     int cur_level) const {
 
     const int num_words = allowed.numWords();
