@@ -227,17 +227,20 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
                                 for (int psub = 0; psub < num_psub; ++psub) {
                                     if (!allowed.at(begin, end, ptag)[psub]) continue;
+                                    auto & score_list_p = score_list[psub];
+                                    if (score_list_p.empty()) continue;
                                     double po = outside.at(begin, end, ptag)[psub];
 
                                     for (int lsub = 0; lsub < num_lsub; ++lsub) {
                                         if (!allowed.at(begin, mid, ltag)[lsub]) continue;
-                                        if (score_list[psub][lsub].empty()) continue;
+                                        auto & score_list_pl = score_list_p[lsub];
+                                        if (score_list_pl.empty()) continue;
                                         double li = inside.at(begin, mid, ltag)[lsub];
 
                                         for (int rsub = 0; rsub < num_rsub; ++rsub) {
                                             if (!allowed.at(mid, end, rtag)[rsub]) continue;
                                             double ri = inside.at(mid, end, rtag)[rsub];
-                                            double beta = score_list[psub][lsub][rsub];
+                                            double beta = score_list_pl[rsub];
                                             rule_score += po * li * ri * beta;
                                         }
                                     }
@@ -310,12 +313,14 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
                     for (int psub = 0; psub < num_psub; ++psub) {
                         if (!allowed.at(begin, end, ptag)[psub]) continue;
+                        auto & score_list_p = score_list[psub];
+                        if (score_list_p.empty()) continue;
                         double po = outside.at(begin, end, ptag)[psub];
                         
                         for (int csub = 0; csub < num_csub; ++csub) {
                             if (!allowed.at(begin, end, ctag)[csub]) continue;
                             double ci = inside.at(begin, end, ctag)[csub];
-                            double beta = score_list[psub][csub];
+                            double beta = score_list_p[csub];
                             rule_score += po * ci * beta;
                         }
                     }
@@ -592,7 +597,8 @@ void LAPCFGParser::calculateInsideScores(
                                 if (min > max) continue;
 
                                 int num_rsub = tag_set_->numSubtags(rtag, cur_level);
-                                auto & score_list = rule->getScoreList();
+                                auto & score_list_p = rule->getScoreList()[psub];
+                                if (score_list_p.empty()) continue;
                                 
                                 for (int mid = min; mid <= max; ++mid) {
                                     if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
@@ -600,13 +606,14 @@ void LAPCFGParser::calculateInsideScores(
                             
                                     for (int lsub = 0; lsub < num_lsub; ++lsub) {
                                         if (!allowed.at(begin, mid, ltag)[lsub]) continue;
-                                        if (score_list[psub][lsub].empty()) continue;
+                                        auto & score_list_pl = score_list_p[lsub];
+                                        if (score_list_pl.empty()) continue;
                         
                                         for (int rsub = 0; rsub < num_rsub; ++rsub) {
                                             if (!allowed.at(mid, end, rtag)[rsub]) continue;
                                 
                                             sum +=
-                                                score_list[psub][lsub][rsub] *
+                                                score_list_pl[rsub] *
                                                 inside.at(begin, mid, ltag)[lsub] *
                                                 inside.at(mid, end, rtag)[rsub];
                                         }
@@ -651,12 +658,13 @@ void LAPCFGParser::calculateInsideScores(
                         if (len > 1 && cur_lexicon.hasEntry(ctag)) continue; // semi-terminal
                         if (ctag == ptag) continue;
                         int num_csub = tag_set_->numSubtags(ctag, cur_level);
-                        auto & score_list = rule->getScoreList();
+                        auto & score_list_p = rule->getScoreList()[psub];
+                        if (score_list_p.empty()) continue;
                         
                         for (int csub = 0; csub < num_csub; ++csub) {
                             if (!allowed.at(begin, end, ctag)[csub]) continue;
                             delta_unary[ptag][psub] +=
-                                score_list[psub][csub] *
+                                score_list_p[csub] *
                                 inside.at(begin, end, ctag)[csub];
                         }
                     }
@@ -735,8 +743,10 @@ void LAPCFGParser::calculateOutsideScores(
 
                         for (int psub = 0; psub < num_psub; ++psub) {
                             if (!allowed.at(begin, end, ptag)[psub]) continue;
+                            auto & score_list_p = score_list[psub];
+                            if (score_list_p.empty()) continue;
                             delta_unary[ctag][csub] +=
-                                score_list[psub][csub] *
+                                score_list_p[csub] *
                                 outside.at(begin, end, ptag)[psub];
                         }
                     }
@@ -781,7 +791,8 @@ void LAPCFGParser::calculateOutsideScores(
                                 if (min > max) continue;
 
                                 int num_rsub = tag_set_->numSubtags(rtag, cur_level);
-                                auto & score_list = rule->getScoreList();
+                                auto & score_list_p = rule->getScoreList()[psub];
+                                if (score_list_p.empty()) continue;
 
                                 for (int mid = min; mid <= max; ++mid) {
                                     if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
@@ -789,12 +800,13 @@ void LAPCFGParser::calculateOutsideScores(
                         
                                     for (int lsub = 0; lsub < num_lsub; ++lsub) {
                                         if (!allowed.at(begin, mid, ltag)[lsub]) continue;
-                                        if (score_list[psub][lsub].empty()) continue;
+                                        auto & score_list_pl = score_list_p[lsub];
+                                        if (score_list_pl.empty()) continue;
 
                                         for (int rsub = 0; rsub < num_rsub; ++rsub) {
                                             if (!allowed.at(mid, end, rtag)[rsub]) continue;
 
-                                            double rule_score = score_list[psub][lsub][rsub];
+                                            double rule_score = score_list_pl[rsub];
                                             double parent_score = outside.at(begin, end, ptag)[psub];
                                             outside.at(begin, mid, ltag)[lsub] +=
                                                 rule_score * parent_score *

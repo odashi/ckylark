@@ -15,7 +15,7 @@ public:
         , nsub_parent_(nsub_parent)
         , nsub_left_(nsub_left)
         , nsub_right_(nsub_right)
-        , score_(nsub_parent, std::vector<std::vector<double> >(nsub_left)) {
+        , score_(nsub_parent, std::vector<std::vector<double> >()) {
     }
 
     ~BinaryRule() {}
@@ -28,6 +28,7 @@ public:
     inline size_t numRightSubtags() const { return nsub_right_; }
 
     inline double getScore(int sub_parent, int sub_left, int sub_right) const {
+        if (score_[sub_parent].empty()) return 0.0;
         if (score_[sub_parent][sub_left].empty()) return 0.0;
         return score_[sub_parent][sub_left][sub_right];
     }
@@ -36,6 +37,9 @@ public:
     inline const std::vector<std::vector<std::vector<double> > > & getScoreList() const { return score_; }
 
     inline void setScore(int sub_parent, int sub_left, int sub_right, double value) {
+        if (score_[sub_parent].empty()) {
+            score_[sub_parent].assign(nsub_left_, std::vector<double>());
+        }
         if (score_[sub_parent][sub_left].empty()) {
             score_[sub_parent][sub_left].assign(nsub_right_, 0.0);
         }
@@ -43,6 +47,9 @@ public:
     }
 
     inline void addScore(int sub_parent, int sub_left, int sub_right, double delta) {
+        if (score_[sub_parent].empty()) {
+            score_[sub_parent].assign(nsub_left_, std::vector<double>());
+        }
         if (score_[sub_parent][sub_left].empty()) {
             score_[sub_parent][sub_left].assign(nsub_right_, 0.0);
         }
@@ -68,7 +75,7 @@ public:
         , child_(child)
         , nsub_parent_(nsub_parent)
         , nsub_child_(nsub_child)
-        , score_(nsub_parent, std::vector<double>(nsub_child, 0.0)) {
+        , score_(nsub_parent, std::vector<double>()) {
     }
 
     ~UnaryRule() {}
@@ -79,6 +86,7 @@ public:
     inline size_t numChildSubtags() const { return nsub_child_; }
 
     inline double getScore(int sub_parent, int sub_child) const {
+        if (score_[sub_parent].empty()) return 0.0;
         return score_[sub_parent][sub_child];
     }
 
@@ -86,10 +94,16 @@ public:
     inline const std::vector<std::vector<double> > & getScoreList() const { return score_; }
 
     inline void setScore(int sub_parent, int sub_child, double value) {
+        if (score_[sub_parent].empty()) {
+            score_[sub_parent].assign(nsub_child_, 0.0);
+        }
         score_[sub_parent][sub_child] = value;
     }
 
     inline void addScore(int sub_parent, int sub_child, double delta) {
+        if (score_[sub_parent].empty()) {
+            score_[sub_parent].assign(nsub_child_, 0.0);
+        }
         score_[sub_parent][sub_child] += delta;
     }
 
