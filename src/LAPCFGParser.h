@@ -28,10 +28,10 @@ public:
 
     std::shared_ptr<Tree<std::string> > parse(const std::vector<std::string> & sentence) const;
 
-    Dictionary & getWordTable() { return *word_table_; }
-    TagSet & getTagSet() { return *tag_set_; }
-    Lexicon & getLexicon(int level) { return *(lexicon_[level]); }
-    Grammar & getGrammar(int level) { return *(grammar_[level]); }
+    const Dictionary & getWordTable() const { return *word_table_; }
+    const TagSet & getTagSet() const { return *tag_set_; }
+    const Lexicon & getLexicon(int level) const { return *(lexicon_[level]); }
+    const Grammar & getGrammar(int level) const { return *(grammar_[level]); }
 
     double getPruningThreshold() const { return prune_threshold_; }
     void setPruningThreshold(double value);

@@ -163,8 +163,8 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     const double log_normalizer = log(inside.at(0, num_words, root_tag)[0]);
     const double NEG_INFTY = -1e20;
     const int fine_level = depth - 1;
-    const Lexicon & fine_lexicon = *(lexicon_[fine_level]);
-    const Grammar & fine_grammar = *(grammar_[fine_level]);
+    const Lexicon & fine_lexicon = getLexicon(fine_level);
+    const Grammar & fine_grammar = getGrammar(fine_level);
 
     for (int len = 1; len <= num_words; ++len) {
         for (int begin = 0; begin < num_words - len + 1; ++begin) {
@@ -495,7 +495,7 @@ void LAPCFGParser::setInsideScoresByLexicon(
 
     const int num_words = allowed.numWords();
     const int num_tags = allowed.numTags();
-    const Lexicon & cur_lexicon = *(lexicon_[cur_level]);
+    const Lexicon & cur_lexicon = getLexicon(cur_level);
 
     for (int begin = 0; begin < num_words; ++begin) {
         int end = begin + 1;
@@ -527,8 +527,8 @@ void LAPCFGParser::calculateInsideScores(
 
     const int num_words = allowed.numWords();
     const int num_tags = allowed.numTags();
-    const Lexicon & cur_lexicon = *(lexicon_[cur_level]);
-    const Grammar & cur_grammar = *(grammar_[cur_level]);
+    const Lexicon & cur_lexicon = getLexicon(cur_level);
+    const Grammar & cur_grammar = getGrammar(cur_level);
 
     for (int len = 1; len <= num_words; ++len) {
         for (int begin = 0; begin < num_words - len + 1; ++begin) {
@@ -653,8 +653,8 @@ void LAPCFGParser::calculateOutsideScores(
     const int num_words = allowed.numWords();
     const int num_tags = allowed.numTags();
     const int root_tag = tag_set_->getTagId("ROOT");
-    const Lexicon & cur_lexicon = *(lexicon_[cur_level]);
-    const Grammar & cur_grammar = *(grammar_[cur_level]);
+    const Lexicon & cur_lexicon = getLexicon(cur_level);
+    const Grammar & cur_grammar = getGrammar(cur_level);
 
     outside.at(0, num_words, root_tag)[0] = 1.0;
 
