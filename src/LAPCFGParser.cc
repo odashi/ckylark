@@ -769,7 +769,7 @@ void LAPCFGParser::calculateOutsideScores(
                                 int num_rsub = tag_set_->numSubtags(rtag, cur_level);
                                 auto & score_list = rule->getScoreList();
 
-                                for (int mid = begin + 1; mid < end; ++mid) {
+                                for (int mid = min; mid <= max; ++mid) {
                                     if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
                                     if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
                         
