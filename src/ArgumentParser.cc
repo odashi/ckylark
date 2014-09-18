@@ -25,7 +25,11 @@ void ArgumentParser::addArgument(
     bool required) {
 
     if (parsed_) {
-        throw runtime_error("adding new argument after parsing.");
+        throw runtime_error("ArgumentParser::addArgument(): adding new argument after parsing.");
+    }
+
+    if (args_.find(name) != args_.end()) {
+        throw runtime_error("ArgumentParser::addArgument(): entry \"" + name + "\" is already exist.");
     }
 
     // value = defval
@@ -63,7 +67,7 @@ void ArgumentParser::printUsage() const {
 
 bool ArgumentParser::parseArgs(int argc, char * argv[]) {
     if (parsed_) {
-        throw runtime_error("trying argument parsing twice.");
+        throw runtime_error("ArgumentParser::parseArgs(): trying argument parsing twice.");
     }
 
     // collecting required arguments
@@ -117,7 +121,7 @@ bool ArgumentParser::parseArgs(int argc, char * argv[]) {
                 stod(ent.value);
                 break;
             default:
-                throw runtime_error("invalid argument type.");
+                throw runtime_error("ArgumentParser::parseArgs(): invalid argument type.");
                 break;
             }
         } catch (...) {
@@ -131,42 +135,42 @@ bool ArgumentParser::parseArgs(int argc, char * argv[]) {
 
 string ArgumentParser::getString(const string & name) const {
     if (!parsed_) {
-        throw runtime_error("retrieving argument before parsing.");
+        throw runtime_error("ArgumentParser::getString(): retrieving argument before parsing.");
     }
     map<string, Entry>::const_iterator it = args_.find(name);
     if (it == args_.end()) {
-        throw runtime_error("undefined argument: \"" + name + "\"");
+        throw runtime_error("ArgumentParser::getString(): undefined argument: \"" + name + "\"");
     }
     if (it->second.argtype != ARGTYPE_STRING) {
-        throw runtime_error("\"" + name + "\" is not a string argument.");
+        throw runtime_error("ArgumentParser::getString(): \"" + name + "\" is not a string argument.");
     }
     return it->second.value;
 }
 
 int ArgumentParser::getInt(const string & name) const {
     if (!parsed_) {
-        throw runtime_error("retrieving argument before parsing.");
+        throw runtime_error("ArgumentParser::getInt(): retrieving argument before parsing.");
     }
     map<string, Entry>::const_iterator it = args_.find(name);
     if (it == args_.end()) {
-        throw runtime_error("undefined argument: \"" + name + "\"");
+        throw runtime_error("ArgumentParser::getInt(): undefined argument: \"" + name + "\"");
     }
     if (it->second.argtype != ARGTYPE_INT) {
-        throw runtime_error("\"" + name + "\" is not a integer argument.");
+        throw runtime_error("ArgumentParser::getInt(): \"" + name + "\" is not a integer argument.");
     }
     return stoi(it->second.value);
 }
 
 double ArgumentParser::getReal(const string & name) const {
     if (!parsed_) {
-        throw runtime_error("retrieving argument before parsing.");
+        throw runtime_error("ArgumentParser::getReal(): retrieving argument before parsing.");
     }
     map<string, Entry>::const_iterator it = args_.find(name);
     if (it == args_.end()) {
-        throw runtime_error("undefined argument: \"" + name + "\"");
+        throw runtime_error("ArgumentParser::getReal(): undefined argument: \"" + name + "\"");
     }
     if (it->second.argtype != ARGTYPE_REAL) {
-        throw runtime_error("\"" + name + "\" is not a real argument.");
+        throw runtime_error("ArgumentParser::getReal(): \"" + name + "\" is not a real argument.");
     }
     return stod(it->second.value);
 }
