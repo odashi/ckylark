@@ -177,6 +177,9 @@ bool ArgumentParser::parseArgs(int argc, char * argv[]) {
         throw runtime_error("ArgumentParser::parseArgs(): trying argument parsing twice.");
     }
 
+    // once call this method, the parser will be freezed.
+    parsed_ = true;
+
     // collecting required arguments
     list<string> required_list;
     for (map<string, Entry>::iterator it = args_.begin(); it != args_.end(); ++it) {
@@ -241,7 +244,6 @@ bool ArgumentParser::parseArgs(int argc, char * argv[]) {
         return false;
     }
 
-    parsed_ = true;
     return true;
 }
 

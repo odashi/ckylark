@@ -18,6 +18,8 @@ using namespace AHCParser;
 
 unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     unique_ptr<ArgumentParser> ap(new ArgumentParser("ahcparse -model <model-dir> [options]"));
+
+    ap->addSwitchArgument("help", "print this manual and exit");
     
     ap->addStringArgument("model", "", "model directory", true);
     
@@ -29,10 +31,17 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
 
     ap->addSwitchArgument("add-root-tag", "add ROOT tag into output tree");
 
-    if (!ap->parseArgs(argc, argv)) {
+    bool ret = ap->parseArgs(argc, argv);
+
+    if (ap->getSwitch("help")) {
         ap->printUsage();
         exit(0);
     }
+
+    if (!ret) {
+        exit(0);
+    }
+
     return ap;
 }
 
