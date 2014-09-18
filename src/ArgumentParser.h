@@ -8,21 +8,48 @@ namespace AHCParser {
 
 class ArgumentParser {
 
-public:
     enum ArgumentType {
+        ARGTYPE_SWITCH,
         ARGTYPE_STRING,
-        ARGTYPE_INT,
+        ARGTYPE_INTEGER,
         ARGTYPE_REAL,
     }; // enum ArgumentType
+    
+    struct Entry {
+        // settings
+        ArgumentType argtype;
+        std::string help;
+        bool required;
+        // values
+        bool sw_value, sw_default;
+        std::string str_value, str_default;
+        int int_value, int_default;
+        double real_value, real_default;
+    }; // struct Entry
 
+public:
     ArgumentParser(const std::string & bin_name);
     ~ArgumentParser();
 
-    void addArgument(
-        ArgumentType argtype,
+    void addSwitchArgument(
         const std::string & name,
-        const std::string & metavar,
-        const std::string & defval,
+        const std::string & help);
+
+    void addStringArgument(
+        const std::string & name,
+        const std::string & default_value,
+        const std::string & help,
+        bool required);
+
+    void addIntegerArgument(
+        const std::string & name,
+        int default_value,
+        const std::string & help,
+        bool required);
+
+    void addRealArgument(
+        const std::string & name,
+        double default_value,
         const std::string & help,
         bool required);
 
@@ -30,23 +57,23 @@ public:
 
     bool parseArgs(int argc, char * argv[]);
 
+    bool getSwitch(const std::string & name) const;
     std::string getString(const std::string & name) const;
-    int getInt(const std::string & name) const;
+    int getInteger(const std::string & name) const;
     double getReal(const std::string & name) const;
 
 private:
-    struct Entry {
-        ArgumentType argtype;
-        std::string value;
-        std::string metavar;
-        std::string defval;
-        std::string help;
-        bool required;
-    }; // struct Entry
-
     bool parsed_;
-    std::string bin_name_;
+    std::string usage_;
     std::map<std::string, Entry> args_;
+
+    void checkNewArgument(const std::string & name) const;
+
+    std::string getArgumentTypeText(ArgumentType argtype) const;
+    
+    std::string getMetavar(ArgumentType argtype) const;
+
+    const Entry & getEntry(const std::string & name, ArgumentType argtype) const;
 
 }; // class ArgumentParser
 

@@ -17,14 +17,15 @@ using namespace std;
 using namespace AHCParser;
 
 unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
-    unique_ptr<ArgumentParser> ap(new ArgumentParser("ahcparse -model <model-dir>"));
+    unique_ptr<ArgumentParser> ap(new ArgumentParser("ahcparse -model <model-dir> [options]"));
     
-    ap->addArgument(ArgumentParser::ARGTYPE_STRING, "input", "PATH", "/dev/stdin", "input file", false);
-    ap->addArgument(ArgumentParser::ARGTYPE_STRING, "output", "PATH", "/dev/stdout", "output file", false);
-    ap->addArgument(ArgumentParser::ARGTYPE_STRING, "model", "PATH", "", "model directory", true);
+    ap->addStringArgument("model", "", "model directory", true);
+    
+    ap->addStringArgument("input", "/dev/stdin", "input file", false);
+    ap->addStringArgument("output", "/dev/stdout", "output file", false);
 
-    ap->addArgument(ArgumentParser::ARGTYPE_REAL, "prune-threshold", "FLOAT", "1e-5", "coarse-to-fine pruning threshold", false);
-    ap->addArgument(ArgumentParser::ARGTYPE_REAL, "smooth-unklex", "FLOAT", "1e-10", "smoothing strength using UNK lexicon", false);
+    ap->addRealArgument("prune-threshold", 1e-5, "coarse-to-fine pruning threshold", false);
+    ap->addRealArgument("smooth-unklex", 1e-10, "smoothing strength using UNK lexicon", false);
 
     if (!ap->parseArgs(argc, argv)) {
         ap->printUsage();
