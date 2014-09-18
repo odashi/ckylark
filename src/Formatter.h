@@ -13,7 +13,9 @@ class Formatter {
     Formatter(const Formatter &) = delete;
 
 public:
-    static std::string ToPennTreeBank(const Tree<std::string> & parse);
+    static std::string ToPennTreeBank(
+        const Tree<std::string> & parse,
+        bool add_root_tag);
 
 private:
     static std::string escapeForPennTreeBank(const std::string & raw);

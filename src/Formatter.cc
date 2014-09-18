@@ -4,22 +4,26 @@ using namespace std;
 
 namespace AHCParser {
 
-string Formatter::ToPennTreeBank(const Tree<string> & parse) {
-    if (parse.isLeaf()) {
-        string tag = escapeForPennTreeBank(parse.value());
-        if (!tag.empty()) {
-            return tag;
-        }
-        return "()";
-    }
+string Formatter::ToPennTreeBank(
+    const Tree<string> & parse,
+    bool add_root_tag) {
 
-    string repr = "(" + parse.value();
-    int nc = parse.numChildren();
-    for (int i = 0; i < nc; ++i) {
-        repr += " " + ToPennTreeBank(parse.child(i));
+    string tag = escapeForPennTreeBank(parse.value());
+
+    if (tag == "ROOT") {
+        string child = ToPennTreeBank(parse.child(0), true);
+        return (add_root_tag ? "(ROOT " : "( ") + child + " )";
+    } else {
+        if (parse.isLeaf()) {
+            return tag.empty() ? "()" : tag;
+        }
+        int nc = parse.numChildren();
+        string child = "";
+        for (int i = 0; i < nc; ++i) {
+           child += " " + ToPennTreeBank(parse.child(i), true);
+        }
+        return "(" + tag + child + ")";
     }
-    repr += ")";
-    return repr;
 }
 
 string Formatter::escapeForPennTreeBank(const string & raw) {

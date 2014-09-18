@@ -27,6 +27,8 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     ap->addRealArgument("prune-threshold", 1e-5, "coarse-to-fine pruning threshold", false);
     ap->addRealArgument("smooth-unklex", 1e-10, "smoothing strength using UNK lexicon", false);
 
+    ap->addSwitchArgument("add-root-tag", "add ROOT tag into output tree");
+
     if (!ap->parseArgs(argc, argv)) {
         ap->printUsage();
         exit(0);
@@ -81,7 +83,7 @@ int main(int argc, char * argv[]) {
         shared_ptr<Tree<string> > parse = parser->parse(ls);
         double lap = timer.stop();
 
-        string repr = Formatter::ToPennTreeBank(*parse);
+        string repr = Formatter::ToPennTreeBank(*parse, ap->getSwitch("add-root-tag"));
         cerr << "  Parse: " << repr << endl;
         fprintf(stderr, "  Time: %.3fs\n", lap);
         ofs << repr << endl;
