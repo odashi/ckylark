@@ -27,6 +27,8 @@ ahcparse_SOURCES = \
     TagSet.h \
     Timer.cc \
     Timer.h \
+    Tracer.cc \
+    Tracer.h \
     Tree.h \
     main.cc \
     ;
