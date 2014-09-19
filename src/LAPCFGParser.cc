@@ -2,14 +2,15 @@
 
 #include "Mapping.h"
 #include "ModelProjector.h"
+#include "Tracer.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/format.hpp>
 
 #include <algorithm>
 #include <cstdio>
 #include <cmath>
 #include <functional>
-#include <iostream>
 #include <fstream>
 #include <limits>
 #include <stdexcept>
@@ -38,7 +39,7 @@ shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(const string & path)
 }
 
 void LAPCFGParser::loadWordTable(const string & path) {
-    cerr << "Loading words: " << path << " ..." << endl;
+    Tracer::println(1, "Loading words: " + path + " ...");
     
     ifstream ifs(path);
     if (!ifs.is_open()) {
@@ -58,7 +59,7 @@ void LAPCFGParser::loadWordTable(const string & path) {
 }
 
 void LAPCFGParser::loadTagSet(const string & path) {
-    cerr << "Loading tags: " << path << " ..." << endl;
+    Tracer::println(1, "Loading tags: " + path + " ...");
     
     ifstream ifs(path);
     if (!ifs.is_open()) {
@@ -73,7 +74,7 @@ void LAPCFGParser::loadTagSet(const string & path) {
 }
 
 void LAPCFGParser::loadLexicon(const string & path) {
-    cerr << "Loading lexicon: " << path << " ..." << endl;
+    Tracer::println(1, "Loading lexicon: " + path + " ...");
     
     ifstream ifs(path);
     if (!ifs.is_open()) {
@@ -89,7 +90,7 @@ void LAPCFGParser::loadLexicon(const string & path) {
 }
 
 void LAPCFGParser::loadGrammar(const string & path) {
-    cerr << "Loading grammar: " << path << " ..." << endl;
+    Tracer::println(1, "Loading grammar: " + path + " ...");
     
     ifstream ifs(path);
     if (!ifs.is_open()) {
@@ -108,7 +109,8 @@ void LAPCFGParser::generateCoarseModels() {
     const int depth = tag_set_->getDepth();
 
     for (int level = depth-2; level >= 0; --level) {
-        cerr << "Generating coarse model (level=" << level << ") ..." << endl;
+        Tracer::println(1, (boost::format("Generating coarse model (level=%d) ...") % level).str());
+        
         int fine = grammar_.size() - 1;
         ModelProjector projector(*tag_set_, *(lexicon_[fine]), *(grammar_[fine]), depth-1, level);
         lexicon_.insert(lexicon_.begin(), projector.generateLexicon());
@@ -148,7 +150,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
         // check if all possible parses are pruned
         double sentence_score = inside.at(0, num_words, root_tag)[0];
         if (sentence_score == 0.0) {
-            cerr << "**** No any possible parses! ****" << endl;
+            Tracer::println(1, (boost::format("  No any possible parses (level=%d).") % level).str());
             return getDefaultParse();
         }
 
@@ -437,7 +439,10 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
     Tree<string> * parse = buildTree(0, num_words, root_tag, true);
     if (parse) return shared_ptr<Tree<string> >(parse);
-    else return getDefaultParse();
+    else {
+        Tracer::println(1, "  No any possible max-rule parse.");
+        return getDefaultParse();
+    }
 }
 
 void LAPCFGParser::setPruningThreshold(double value) {

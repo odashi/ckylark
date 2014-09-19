@@ -3,9 +3,11 @@
 #include "LAPCFGParser.h"
 #include "Mapping.h"
 #include "Timer.h"
+#include "Tracer.h"
 
 #include <boost/algorithm/string.hpp>
-#include <iostream>
+#include <boost/format.hpp>
+
 #include <cstdio>
 #include <cmath>
 #include <fstream>
@@ -20,6 +22,7 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     unique_ptr<ArgumentParser> ap(new ArgumentParser("ahcparse -model <model-prefix> [options]"));
 
     ap->addSwitchArgument("help", "print this manual and exit");
+    ap->addIntegerArgument("trace-level", 0, "detail level of trace text", false);
     
     ap->addStringArgument("model", "", "prefix of model path", true);
     
@@ -47,18 +50,20 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
 
 int main(int argc, char * argv[]) {
     unique_ptr<ArgumentParser> ap = ::parseArgs(argc, argv);
+
+    Tracer::setTraceLevel(ap->getInteger("trace-level"));
     
     string ifname = ap->getString("input");
     ifstream ifs(ifname);
     if (!ifs.is_open()) {
-        cerr << "ERROR: cannot open file to read: " << ifname << endl;
+        Tracer::println(0, "ERROR: cannot open input file: " + ifname);
         return 1;
     }
 
     string ofname = ap->getString("output");
     ofstream ofs(ofname);
     if (!ofs.is_open()) {
-        cerr << "ERROR: cannot open file to write: " << ofname << endl;
+        Tracer::println(0, "ERROR: cannot open output file: " + ofname);
         return 1;
     }
 
@@ -68,7 +73,7 @@ int main(int argc, char * argv[]) {
 
     Timer timer;
 
-    cerr << "Ready" << endl;
+    Tracer::println(1, "Ready");
 
     string line;
     int total_lines = 0;
@@ -84,23 +89,26 @@ int main(int argc, char * argv[]) {
         ++total_lines;
         total_words += ls.size();
         
-        cerr << "Input " << total_lines << ":";
-        for (const string & s : ls) cerr << " " << s;
-        cerr << endl;
+        Tracer::print(1, (boost::format("Input %d:") % total_lines).str());
+        for (const string & s : ls) {
+            Tracer::print(1, " " + s);
+        }
+        Tracer::println(1);
 
         timer.start();
         shared_ptr<Tree<string> > parse = parser->parse(ls);
         double lap = timer.stop();
 
         string repr = Formatter::ToPennTreeBank(*parse, ap->getSwitch("add-root-tag"));
-        cerr << "  Parse: " << repr << endl;
-        fprintf(stderr, "  Time: %.3fs\n", lap);
+        
+        Tracer::println(1, "  Parse: " + repr);
+        Tracer::println(1, (boost::format("  Time: %.3fs") % lap).str());
         ofs << repr << endl;
     }
 
-    cerr << endl;
-    fprintf(stderr, "Parsed %d sentences, %d words.\n", total_lines, total_words);
-    fprintf(stderr, "Total parsing time: %.3fs.\n", timer.elapsed());
+    Tracer::println(1);
+    Tracer::println(1, (boost::format("Parsed %d sentences, %d words.") % total_lines % total_words).str());
+    Tracer::println(1, (boost::format("Total parsing time: %.3fs.") % timer.elapsed()).str());
 
     return 0;
 }

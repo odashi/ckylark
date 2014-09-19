@@ -11,8 +11,9 @@ class Tracer {
     Tracer(const Tracer &) = delete;
 
 public:
-    static void print(const std::string & text, unsigned int level);
-    static void println(const std::string & text, unsigned int level);
+    static void print(unsigned int level, const std::string & text);
+    static void println(unsigned int level, const std::string & text);
+    static void println(unsigned int level);
     static unsigned int getTraceLevel();
     static void setTraceLevel(unsigned int value);
 
