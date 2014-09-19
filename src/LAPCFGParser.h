@@ -40,6 +40,9 @@ public:
     const Lexicon & getLexicon(int level) const { return *(lexicon_[level]); }
     const Grammar & getGrammar(int level) const { return *(grammar_[level]); }
 
+    int getFineLevel() const { return fine_level_; }
+    void setFineLevel(int value);
+
     double getPruningThreshold() const { return prune_threshold_; }
     void setPruningThreshold(double value);
 
@@ -52,6 +55,7 @@ private:
     std::vector<std::shared_ptr<Lexicon> > lexicon_;
     std::vector<std::shared_ptr<Grammar> > grammar_;
 
+    int fine_level_;
     double prune_threshold_;
     double smooth_unklex_;
 

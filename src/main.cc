@@ -29,6 +29,7 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     ap->addStringArgument("input", "/dev/stdin", "input file", false);
     ap->addStringArgument("output", "/dev/stdout", "output file", false);
 
+    ap->addIntegerArgument("fine-level", -1, "most fine level to parse, or -1 (use all level)", false);
     ap->addRealArgument("prune-threshold", 1e-5, "coarse-to-fine pruning threshold", false);
     ap->addRealArgument("smooth-unklex", 1e-10, "smoothing strength using UNK lexicon", false);
 
@@ -68,8 +69,14 @@ int main(int argc, char * argv[]) {
     }
 
     shared_ptr<LAPCFGParser> parser = LAPCFGParser::loadFromBerkeleyDump(ap->getString("model"));
+
+    parser->setFineLevel(ap->getInteger("fine-level"));
     parser->setPruningThreshold(ap->getReal("prune-threshold"));
     parser->setUNKLexiconSmoothing(ap->getReal("smooth-unklex"));
+
+    Tracer::println(1, (boost::format("fine-level: %d (requested: %d)") % parser->getFineLevel() % ap->getInteger("fine-level")).str());
+    Tracer::println(1, (boost::format("prune-threshold: %.3e") % parser->getPruningThreshold()).str());
+    Tracer::println(1, (boost::format("smooth-unklex: %.3e") % parser->getUNKLexiconSmoothing()).str());
 
     Timer timer;
 

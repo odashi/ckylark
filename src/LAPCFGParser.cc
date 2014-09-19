@@ -20,7 +20,8 @@ using namespace std;
 namespace AHCParser {
 
 LAPCFGParser::LAPCFGParser()
-    : prune_threshold_(1e-5)
+    : fine_level_(-1)
+    , prune_threshold_(1e-5)
     , smooth_unklex_(0) {
 }
 
@@ -34,6 +35,7 @@ shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(const string & path)
     parser->loadLexicon(path + ".lexicon");
     parser->loadGrammar(path + ".grammar");
     parser->generateCoarseModels();
+    parser->setFineLevel(-1);
 
     return parser;
 }
@@ -121,7 +123,6 @@ void LAPCFGParser::generateCoarseModels() {
 shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) const {
     const int num_words = sentence.size();
     const int num_tags = tag_set_->numTags();
-    const int depth = tag_set_->getDepth();
     const int root_tag = tag_set_->getTagId("ROOT");
 
     // check empty sentence
@@ -142,7 +143,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     
     // pre-parsing
 
-    for (int level = 0; level < depth; ++level) {
+    for (int level = 0; level <= fine_level_; ++level) {
         initializeCharts(allowed, inside, outside, extent, level);
         setInsideScoresByLexicon(allowed, inside, wid_list, level);
         calculateInsideScores(allowed, inside, extent, level);
@@ -169,9 +170,8 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     CKYTable<int> maxc_child(num_words, num_tags);
     const double log_normalizer = log(inside.at(0, num_words, root_tag)[0]);
     const double NEG_INFTY = -1e20;
-    const int fine_level = depth - 1;
-    const Lexicon & fine_lexicon = getLexicon(fine_level);
-    const Grammar & fine_grammar = getGrammar(fine_level);
+    const Lexicon & fine_lexicon = getLexicon(fine_level_);
+    const Grammar & fine_grammar = getGrammar(fine_level_);
 
     for (int len = 1; len <= num_words; ++len) {
         for (int begin = 0; begin < num_words - len + 1; ++begin) {
@@ -193,11 +193,11 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                 for (int ptag = 0; ptag < num_tags; ++ptag) {
                     if (fine_lexicon.hasEntry(ptag)) continue; // semi-terminal
                     auto & binary_rules_p = fine_grammar.getBinaryRuleListByPLR()[ptag];
-                    int num_psub = tag_set_->numSubtags(ptag, fine_level);
+                    int num_psub = tag_set_->numSubtags(ptag, fine_level_);
 
                     for (int ltag = 0; ltag < num_tags; ++ltag) {
                         auto & binary_rules_pl = binary_rules_p[ltag];
-                        int num_lsub = tag_set_->numSubtags(ltag, fine_level);
+                        int num_lsub = tag_set_->numSubtags(ltag, fine_level_);
 
                         for (const BinaryRule * rule : binary_rules_pl) {
                             auto & score_list = rule->getScoreList();
@@ -214,7 +214,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                             int max = max1 < max2 ? max1 : max2;
                             if (min > max) continue;
 
-                            int num_rsub = tag_set_->numSubtags(rtag, fine_level);
+                            int num_rsub = tag_set_->numSubtags(rtag, fine_level_);
                             double old_log_score = maxc_log_score.at(begin, end, ptag);
 
                             for (int mid = min; mid <= max; ++mid) {
@@ -271,7 +271,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                     const LexiconEntry * ent_word = fine_lexicon.getEntry(tag, wid);
                     const LexiconEntry * ent_unk = fine_lexicon.getEntry(tag, -1);
                     if (!ent_word && !ent_unk) continue;
-                    int num_sub = tag_set_->numSubtags(tag, fine_level);
+                    int num_sub = tag_set_->numSubtags(tag, fine_level_);
                     double rule_score = 0.0;
 
                     for (int sub = 0; sub < num_sub; ++sub) {
@@ -299,14 +299,14 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
             for (int ptag = 0; ptag < num_tags; ++ptag) {
                 if (fine_lexicon.hasEntry(ptag)) continue; // semi-terminal
                 auto & unary_rules_p = fine_grammar.getUnaryRuleListByPC()[ptag];
-                int num_psub = tag_set_->numSubtags(ptag, fine_level);
+                int num_psub = tag_set_->numSubtags(ptag, fine_level_);
                 
                 for (const UnaryRule * rule : unary_rules_p) {
                     int ctag = rule->child();
                     if (len > 1 && fine_lexicon.hasEntry(ctag)) continue; // semi-terminal
                     if (ctag == ptag) continue;
                     auto & score_list = rule->getScoreList();
-                    int num_csub = tag_set_->numSubtags(ctag, fine_level);
+                    int num_csub = tag_set_->numSubtags(ctag, fine_level_);
 
                     double cur_log_score = maxc_log_score.at(begin, end, ctag);
                     if (cur_log_score < after_unary[ptag]) continue;
@@ -442,6 +442,15 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     else {
         Tracer::println(1, "  No any possible max-rule parse.");
         return getDefaultParse();
+    }
+}
+
+void LAPCFGParser::setFineLevel(int value) {
+    int depth = tag_set_->getDepth();
+    if (value < 0 || value >= depth) {
+        fine_level_ = depth - 1;
+    } else {
+        fine_level_ = value;
     }
 }
 
