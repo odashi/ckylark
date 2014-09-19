@@ -17,11 +17,11 @@ using namespace std;
 using namespace AHCParser;
 
 unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
-    unique_ptr<ArgumentParser> ap(new ArgumentParser("ahcparse -model <model-dir> [options]"));
+    unique_ptr<ArgumentParser> ap(new ArgumentParser("ahcparse -model <model-prefix> [options]"));
 
     ap->addSwitchArgument("help", "print this manual and exit");
     
-    ap->addStringArgument("model", "", "model directory", true);
+    ap->addStringArgument("model", "", "prefix of model path", true);
     
     ap->addStringArgument("input", "/dev/stdin", "input file", false);
     ap->addStringArgument("output", "/dev/stdout", "output file", false);

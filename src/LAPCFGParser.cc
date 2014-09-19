@@ -28,10 +28,10 @@ LAPCFGParser::~LAPCFGParser() {}
 shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(const string & path) {
     shared_ptr<LAPCFGParser> parser(new LAPCFGParser());
 
-    parser->loadWordTable(path + "/words");
-    parser->loadTagSet(path + "/splits");
-    parser->loadLexicon(path + "/lexicon");
-    parser->loadGrammar(path + "/grammar");
+    parser->loadWordTable(path + ".words");
+    parser->loadTagSet(path + ".splits");
+    parser->loadLexicon(path + ".lexicon");
+    parser->loadGrammar(path + ".grammar");
     parser->generateCoarseModels();
 
     return parser;
