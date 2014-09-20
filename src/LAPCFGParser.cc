@@ -787,7 +787,7 @@ void LAPCFGParser::calculateOutsideScores(
             if (len > 1) {
                 for (int ptag = 0; ptag < num_tags; ++ptag) {
                     if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
-                    auto binary_rules_p = cur_grammar.getBinaryRuleListByPLR()[ptag];
+                    auto & binary_rules_p = cur_grammar.getBinaryRuleListByPLR()[ptag];
                     int num_psub = tag_set_->numSubtags(ptag, cur_level);
 
                     for (int psub = 0; psub < num_psub; ++psub) {
