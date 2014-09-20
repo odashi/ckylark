@@ -18,6 +18,7 @@ CXXFLAGS="$CXXFLAGS -std=c++11"
 
 CXXFLAGS="$CXXFLAGS -Wall"
 CXXFLAGS="$CXXFLAGS -O2"
+#CXXFLAGS="$CXXFLAGS -pg"
 
 # Checks for libraries.
 
