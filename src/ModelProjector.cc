@@ -22,6 +22,7 @@ ModelProjector::ModelProjector(
     if (lexicon_.getLevel() != fine_level_) throw runtime_error("ModelProjector: lexicon level is mismatched");
     if (grammar_.getLevel() != fine_level_) throw runtime_error("ModelProjector: grammar level is mismatched");
 
+    int num_tags = tag_set.numTags();
     int num_fine_pos = mapping_.getNumFinePos();
     int num_coarse_pos = mapping_.getNumCoarsePos();
     int root_pos = mapping_.getFinePos(tag_set_.getTagId("ROOT"), 0);
@@ -30,27 +31,25 @@ ModelProjector::ModelProjector(
 
     vector<vector<double> > transition_prob(num_fine_pos, vector<double>(num_fine_pos, 0.0));
     
-    for (auto & it1 : grammar_.getBinaryRuleListByPLR()) {
-        for (auto & it2 : it1) {
-            for (const BinaryRule * rule : it2) {
-                auto & score_list = rule->getScoreList();
-                int psc = tag_set_.numSubtags(rule->parent(), fine_level_);
-                int lsc = tag_set_.numSubtags(rule->left(), fine_level_);
-                int rsc = tag_set_.numSubtags(rule->right(), fine_level_);
-                for (int p = 0; p < psc; ++p) {
-                    auto & score_list_p = score_list[p];
-                    if (score_list_p.empty()) continue;
-                    int pm = mapping_.getFinePos(rule->parent(), p);
-                    for (int l = 0; l < lsc; ++l) {
-                        auto & score_list_pl = score_list_p[l];
-                        if (score_list_pl.empty()) continue;
-                        int lm = mapping_.getFinePos(rule->left(), l);
-                        for (int r = 0; r < rsc; ++r) {
-                            int rm = mapping_.getFinePos(rule->right(), r);
-                            double score = score_list_pl[r];
-                            transition_prob[pm][lm] += score;
-                            transition_prob[pm][rm] += score;
-                        }
+    for (int ptag = 0; ptag < num_tags; ++ptag) {
+        for (const BinaryRule * rule : grammar_.getBinaryRuleList(ptag)) {
+            auto & score_list = rule->getScoreList();
+            int psc = tag_set_.numSubtags(rule->parent(), fine_level_);
+            int lsc = tag_set_.numSubtags(rule->left(), fine_level_);
+            int rsc = tag_set_.numSubtags(rule->right(), fine_level_);
+            for (int p = 0; p < psc; ++p) {
+                auto & score_list_p = score_list[p];
+                if (score_list_p.empty()) continue;
+                int pm = mapping_.getFinePos(rule->parent(), p);
+                for (int l = 0; l < lsc; ++l) {
+                    auto & score_list_pl = score_list_p[l];
+                    if (score_list_pl.empty()) continue;
+                    int lm = mapping_.getFinePos(rule->left(), l);
+                    for (int r = 0; r < rsc; ++r) {
+                        int rm = mapping_.getFinePos(rule->right(), r);
+                        double score = score_list_pl[r];
+                        transition_prob[pm][lm] += score;
+                        transition_prob[pm][rm] += score;
                     }
                 }
             }
@@ -105,7 +104,6 @@ ModelProjector::ModelProjector(
 
     cond_prob_.assign(num_fine_pos, 0.0);
     vector<double> total(num_coarse_pos, 0.0);
-    int num_tags = tag_set_.numTags();
    
     for (int tag = 0; tag < num_tags; ++tag) {
         int fine_num_subtags = tag_set_.numSubtags(tag, fine_level_);
@@ -158,28 +156,27 @@ shared_ptr<Lexicon> ModelProjector::generateLexicon() const {
 shared_ptr<Grammar> ModelProjector::generateGrammar() const {
     Grammar * grm = new Grammar(tag_set_, coarse_level_);
     shared_ptr<Grammar> pgrm(grm);
-
-    for (auto & it1 : grammar_.getBinaryRuleListByPLR()) {
-        for (auto & it2 : it1) {
-            for (const BinaryRule * rule : it2) {
-                BinaryRule & new_rule = grm->getBinaryRule(rule->parent(), rule->left(), rule->right());
-                auto & score_list = rule->getScoreList();
-                int npsc = rule->numParentSubtags();
-                for (int psc = 0; psc < npsc; ++psc) {
-                    auto & score_list_p = score_list[psc];
-                    if (score_list_p.empty()) continue;
-                    int nlsc = rule->numLeftSubtags();
-                    for (int lsc = 0; lsc < nlsc; ++lsc) {
-                        auto & score_list_pl = score_list_p[lsc];
-                        if (score_list_pl.empty()) continue;
-                        int nrsc = rule->numRightSubtags();
-                        for (int rsc = 0; rsc < nrsc; ++rsc) {
-                            int new_psc = mapping_.getFineToCoarseMap(rule->parent(), psc);
-                            int new_lsc = mapping_.getFineToCoarseMap(rule->left(), lsc);
-                            int new_rsc = mapping_.getFineToCoarseMap(rule->right(), rsc);
-                            double delta = cond_prob_[mapping_.getFinePos(rule->parent(), psc)] * score_list_pl[rsc];
-                            new_rule.addScore(new_psc, new_lsc, new_rsc, delta);
-                        }
+    int num_tags = tag_set_.numTags();
+    
+    for (int ptag = 0; ptag < num_tags; ++ptag) {
+        for (const BinaryRule * rule : grammar_.getBinaryRuleList(ptag)) {
+            BinaryRule & new_rule = grm->getBinaryRule(rule->parent(), rule->left(), rule->right());
+            auto & score_list = rule->getScoreList();
+            int npsc = rule->numParentSubtags();
+            for (int psc = 0; psc < npsc; ++psc) {
+                auto & score_list_p = score_list[psc];
+                if (score_list_p.empty()) continue;
+                int nlsc = rule->numLeftSubtags();
+                for (int lsc = 0; lsc < nlsc; ++lsc) {
+                    auto & score_list_pl = score_list_p[lsc];
+                    if (score_list_pl.empty()) continue;
+                    int nrsc = rule->numRightSubtags();
+                    for (int rsc = 0; rsc < nrsc; ++rsc) {
+                        int new_psc = mapping_.getFineToCoarseMap(rule->parent(), psc);
+                        int new_lsc = mapping_.getFineToCoarseMap(rule->left(), lsc);
+                        int new_rsc = mapping_.getFineToCoarseMap(rule->right(), rsc);
+                        double delta = cond_prob_[mapping_.getFinePos(rule->parent(), psc)] * score_list_pl[rsc];
+                        new_rule.addScore(new_psc, new_lsc, new_rsc, delta);
                     }
                 }
             }

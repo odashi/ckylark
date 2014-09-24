@@ -4,6 +4,7 @@
 
 #include <map>
 #include <string>
+#include <iostream>
 
 using namespace std;
 
@@ -12,23 +13,21 @@ namespace AHCParser {
 Grammar::Grammar(const TagSet & tag_set, int level)
     : tag_set_(tag_set)
     , level_(level)
-    , binary_parent_left_(tag_set.numTags(), vector<vector<BinaryRule *> >(tag_set.numTags()) )
-    , binary_parent_right_(tag_set.numTags(), vector<vector<BinaryRule *> >(tag_set.numTags()) )
-    , binary_left_right_(tag_set.numTags(), vector<vector<BinaryRule *> >(tag_set.numTags()) )
+    , binary_parent_(tag_set.numTags())
+    //, binary_parent_left_(tag_set.numTags(), vector<vector<BinaryRule *> >(tag_set.numTags()))
+    //, binary_parent_right_(tag_set.numTags(), vector<vector<BinaryRule *> >(tag_set.numTags()))
+    //, binary_left_right_(tag_set.numTags(), vector<vector<BinaryRule *> >(tag_set.numTags()))
     , unary_parent_(tag_set.numTags())
     , unary_child_(tag_set.numTags()) {
 }
 
 Grammar::~Grammar() {
     // delete all binary rules
-    for (auto& it1 : binary_parent_left_) {
-        for (auto& it2 : it1) {
-            for (auto it3 : it2) {
-                delete it3;
-            }
+    for (auto& it1 : binary_parent_) {
+        for (auto it2 : it1) {
+            delete it2;
         }
     }
-    // delete all unary rules
     for (auto& it1 : unary_parent_) {
         for (auto it2 : it1) {
             delete it2;
@@ -89,22 +88,25 @@ shared_ptr<Grammar> Grammar::loadFromStream(std::istream & stream, const TagSet 
 }
 
 BinaryRule & Grammar::getBinaryRule(int parent, int left, int right) {
-    auto& rules_pl = binary_parent_left_[parent][left];
-    for (auto* rule : rules_pl) {
-        if (rule->right() == right) {
+
+    auto& rules_p = binary_parent_[parent];
+    for (auto* rule : rules_p) {
+        if (rule->left() == left && rule->right() == right) {
             return *rule;
         }
     }
 
-    auto& rules_pr = binary_parent_right_[parent][right];
-    auto& rules_lr = binary_left_right_[left][right];
+    //auto& rules_pl = binary_parent_left_[parent][left];
+    //auto& rules_pr = binary_parent_right_[parent][right];
+    //auto& rules_lr = binary_left_right_[left][right];
     size_t np = tag_set_.numSubtags(parent, level_);
     size_t nl = tag_set_.numSubtags(left, level_);
     size_t nr = tag_set_.numSubtags(right, level_);
     BinaryRule * rule = new BinaryRule(parent, left, right, np, nl, nr);
-    rules_pl.push_back(rule);
-    rules_pr.push_back(rule);
-    rules_lr.push_back(rule);
+    rules_p.push_back(rule);
+    //rules_pl.push_back(rule);
+    //rules_pr.push_back(rule);
+    //rules_lr.push_back(rule);
     return *rule;
 }
 
