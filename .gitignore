@@ -10,6 +10,7 @@ configure
 depcomp
 gmon.out
 install-sh
+ltmain.sh
 Makefile
 Makefile.in
 missing
