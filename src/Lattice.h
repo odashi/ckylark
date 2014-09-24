@@ -1,10 +1,10 @@
-#ifndef AHCP_LATTICE_H_
-#define AHCP_LATTICE_H_
+#ifndef CKYLARK_LATTICE_H_
+#define CKYLARK_LATTICE_H_
 
 #include <string>
 #include <vector>
 
-namespace AHCParser {
+namespace Ckylark {
 
 /*
     this class treats only directed acyclic graph (DAG) shaped lattice.
@@ -38,7 +38,7 @@ private:
 
 }; // class Lattice
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_LATTICE_H_
+#endif // CKYLARK_LATTICE_H_
 

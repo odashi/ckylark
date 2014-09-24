@@ -10,7 +10,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 TagSet::TagSet()
     : depth_(0)
@@ -133,5 +133,5 @@ size_t TagSet::getDepthByNode(Tree<int> & node) {
     return d + 1;
 }
 
-} // namespace AHCParser
+} // namespace Ckylark
 

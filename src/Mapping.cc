@@ -2,7 +2,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 Mapping::Mapping(const TagSet & tag_set, int coarse_level, int fine_level)
     : tag_set_(tag_set)
@@ -47,5 +47,5 @@ Mapping::Mapping(const TagSet & tag_set, int coarse_level, int fine_level)
 
 Mapping::~Mapping() {}
 
-} // namespace AHCParser
+} // namespace Ckylark
 

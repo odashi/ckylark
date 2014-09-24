@@ -1,11 +1,11 @@
-#ifndef AHCP_FORMATTER_H_
-#define AHCP_FORMATTER_H_
+#ifndef CKYLARK_FORMATTER_H_
+#define CKYLARK_FORMATTER_H_
 
 #include "Tree.h"
 
 #include <string>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class Formatter {
 
@@ -22,7 +22,7 @@ private:
 
 }; // class Formatter
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_FORMATTER_H_
+#endif // CKYLARK_FORMATTER_H_
 

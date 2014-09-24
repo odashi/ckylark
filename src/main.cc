@@ -16,10 +16,10 @@
 #include <vector>
 
 using namespace std;
-using namespace AHCParser;
+using namespace Ckylark;
 
 unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
-    unique_ptr<ArgumentParser> ap(new ArgumentParser("ahcparse -model <model-prefix> [options]"));
+    unique_ptr<ArgumentParser> ap(new ArgumentParser("ckylark -model <model-prefix> [options]"));
 
     ap->addSwitchArgument("help", "print this manual and exit");
     ap->addIntegerArgument("trace-level", 0, "detail level of trace text", false);

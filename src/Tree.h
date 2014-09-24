@@ -1,11 +1,11 @@
-#ifndef AHCP_TREE_H_
-#define AHCP_TREE_H_
+#ifndef CKYLARK_TREE_H_
+#define CKYLARK_TREE_H_
 
 #include <stdexcept>
 #include <memory>
 #include <vector>
 
-namespace AHCParser {
+namespace Ckylark {
 
 template <class T>
 class Tree {
@@ -112,7 +112,7 @@ private:
 
 }; // class Tree
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_TREE_H_
+#endif // CKYLARK_TREE_H_
 

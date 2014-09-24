@@ -1,9 +1,9 @@
-#ifndef AHCP_PLF_LATTICE_LOADER_H_
-#define AHCP_PLF_LATTICE_LOADER_H_
+#ifndef CKYLARK_PLF_LATTICE_LOADER_H_
+#define CKYLARK_PLF_LATTICE_LOADER_H_
 
 #include "LatticeLoader.h"
 
-namespace AHCParser {
+namespace Ckylark {
 
 class PLFLatticeLoader : public LatticeLoader {
 
@@ -17,7 +17,7 @@ private:
 
 }; // class PLFLatticeLoader
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_PLF_LATTICE_LOADER_H_
+#endif // CKYLARK_PLF_LATTICE_LOADER_H_
 

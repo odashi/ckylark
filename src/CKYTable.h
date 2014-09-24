@@ -1,9 +1,9 @@
-#ifndef AHCP_CKY_TABLE_H_
-#define AHCP_CKY_TABLE_H_
+#ifndef CKYLARK_CKY_TABLE_H_
+#define CKYLARK_CKY_TABLE_H_
 
 #include <stdexcept>
 
-namespace AHCParser {
+namespace Ckylark {
 
 template <class T>
 class CKYTable {
@@ -52,6 +52,6 @@ private:
 
 }; // class CKYTable
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_CKY_TABLE_H_
+#endif // CKYLARK_CKY_TABLE_H_

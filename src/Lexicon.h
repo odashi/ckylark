@@ -1,5 +1,5 @@
-#ifndef AHCP_LEXICON_H_
-#define AHCP_LEXICON_H_
+#ifndef CKYLARK_LEXICON_H_
+#define CKYLARK_LEXICON_H_
 
 #include "TagSet.h"
 #include "Dictionary.h"
@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class LexiconEntry {
 
@@ -67,7 +67,7 @@ private:
 
 }; // class Lexicon
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_LEXICON_H_
+#endif // CKYLARK_LEXICON_H_
 

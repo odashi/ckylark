@@ -4,7 +4,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 Timer::Timer()
     : elapsed_(0)
@@ -46,4 +46,4 @@ double Timer::elapsed() const {
     return elapsed_ / (double)CLOCKS_PER_SEC;
 }
 
-} // namespace AHCParser
+} // namespace Ckylark

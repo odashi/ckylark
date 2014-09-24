@@ -1,9 +1,9 @@
-#ifndef AHCP_TIMER_H_
-#define AHCP_TIMER_H_
+#ifndef CKYLARK_TIMER_H_
+#define CKYLARK_TIMER_H_
 
 #include <ctime>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class Timer {
 
@@ -27,7 +27,7 @@ private:
 
 }; // class Timer
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_TIMER_H_
+#endif // CKYLARK_TIMER_H_
 

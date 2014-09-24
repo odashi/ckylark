@@ -1,11 +1,11 @@
-#ifndef AHCP_MAPPING_H_
-#define AHCP_MAPPING_H_
+#ifndef CKYLARK_MAPPING_H_
+#define CKYLARK_MAPPING_H_
 
 #include "TagSet.h"
 
 #include <vector>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class Mapping {
 
@@ -42,7 +42,7 @@ private:
 
 }; // class Mapping
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_MAPPING_H_
+#endif // CKYLARK_MAPPING_H_
 

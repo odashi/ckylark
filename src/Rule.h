@@ -1,9 +1,9 @@
-#ifndef AHCP_RULE_H_
-#define AHCP_RULE_H_
+#ifndef CKYLARK_RULE_H_
+#define CKYLARK_RULE_H_
 
 #include <vector>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class BinaryRule {
 
@@ -118,7 +118,7 @@ private:
 
 
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_RULE_H_
+#endif // CKYLARK_RULE_H_
 

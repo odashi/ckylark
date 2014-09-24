@@ -1,10 +1,10 @@
-#ifndef AHCP_ARGUMENT_PARSER_H_
-#define AHCP_ARGUMENT_PARSER_H_
+#ifndef CKYLARK_ARGUMENT_PARSER_H_
+#define CKYLARK_ARGUMENT_PARSER_H_
 
 #include <map>
 #include <string>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class ArgumentParser {
 
@@ -77,7 +77,7 @@ private:
 
 }; // class ArgumentParser
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_ARGUMENT_PARSER_H_
+#endif // CKYLARK_ARGUMENT_PARSER_H_
 

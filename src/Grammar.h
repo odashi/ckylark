@@ -1,5 +1,5 @@
-#ifndef AHCP_GRAMMAR_H_
-#define AHCP_GRAMMAR_H_
+#ifndef CKYLARK_GRAMMAR_H_
+#define CKYLARK_GRAMMAR_H_
 
 #include "TagSet.h"
 #include "Dictionary.h"
@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class Grammar {
 
@@ -47,7 +47,7 @@ private:
 
 }; // class Grammar
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_GRAMMAR_H_
+#endif // CKYLARK_GRAMMAR_H_
 

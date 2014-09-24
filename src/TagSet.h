@@ -1,5 +1,5 @@
-#ifndef AHCP_TAG_SET_H_
-#define AHCP_TAG_SET_H_
+#ifndef CKYLARK_TAG_SET_H_
+#define CKYLARK_TAG_SET_H_
 
 #include "Dictionary.h"
 #include "Tree.h"
@@ -9,7 +9,7 @@
 #include <string>
 #include <vector>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class TagSet {
 
@@ -43,7 +43,7 @@ private:
 
 }; // class TagSet
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_TAG_SET_H_
+#endif // CKYLARK_TAG_SET_H_
 

@@ -1,5 +1,5 @@
-#ifndef AHCP_MODEL_PROJECTOR_H_
-#define AHCP_MODEL_PROJECTOR_H_
+#ifndef CKYLARK_MODEL_PROJECTOR_H_
+#define CKYLARK_MODEL_PROJECTOR_H_
 
 #include "TagSet.h"
 #include "Grammar.h"
@@ -9,7 +9,7 @@
 #include <memory>
 #include <vector>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class ModelProjector {
 
@@ -37,7 +37,7 @@ private:
 
 }; // class ModelProjector
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_MODEL_PROJECTOR_H_
+#endif // CKYLARK_MODEL_PROJECTOR_H_
 

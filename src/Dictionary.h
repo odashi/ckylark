@@ -1,11 +1,11 @@
-#ifndef AHCP_DICTIONARY_H_
-#define AHCP_DICTIONARY_H_
+#ifndef CKYLARK_DICTIONARY_H_
+#define CKYLARK_DICTIONARY_H_
 
 #include <map>
 #include <string>
 #include <vector>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class Dictionary {
 
@@ -26,7 +26,7 @@ private:
 
 }; // class Dictionary
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_DICTIONARY_H_
+#endif // CKYLARK_DICTIONARY_H_
 

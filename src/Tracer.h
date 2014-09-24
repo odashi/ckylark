@@ -1,9 +1,9 @@
-#ifndef AHCP_TRACER_H_
-#define AHCP_TRACER_H_
+#ifndef CKYLARK_TRACER_H_
+#define CKYLARK_TRACER_H_
 
 #include <string>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class Tracer {
 
@@ -22,7 +22,7 @@ private:
 
 }; // class Tracer
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_TRACER_H_
+#endif // CKYLARK_TRACER_H_
 

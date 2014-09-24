@@ -8,7 +8,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 Grammar::Grammar(const TagSet & tag_set, int level)
     : tag_set_(tag_set)
@@ -127,5 +127,5 @@ UnaryRule & Grammar::getUnaryRule(int parent, int child) {
     return *rule;
 }
 
-} // namespace AHCParser
+} // namespace Ckylark
 

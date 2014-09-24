@@ -4,7 +4,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 Lattice::Lattice() {}
 
@@ -42,5 +42,5 @@ size_t Lattice::getEndPos(size_t begin, size_t end) const {
     return end - begin - 1;
 }
 
-} // namespace AHCParser
+} // namespace Ckylark
 

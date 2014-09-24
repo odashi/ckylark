@@ -10,7 +10,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 PLFLatticeLoader::PLFLatticeLoader() {}
 
@@ -124,5 +124,5 @@ shared_ptr<Lattice> PLFLatticeLoader::getNextData() {
     return lattice;
 }
 
-} // namespace AHCParser
+} // namespace Ckylark
 

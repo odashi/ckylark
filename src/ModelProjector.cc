@@ -4,7 +4,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 ModelProjector::ModelProjector(
     const TagSet & tag_set,
@@ -205,5 +205,5 @@ shared_ptr<Grammar> ModelProjector::generateGrammar() const {
     return pgrm;
 }
 
-} // namespace AHCParser
+} // namespace Ckylark
 

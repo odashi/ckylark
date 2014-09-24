@@ -17,7 +17,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 LAPCFGParser::LAPCFGParser()
     : fine_level_(-1)
@@ -903,5 +903,5 @@ void LAPCFGParser::pruneCharts(
     //cerr << "pruned: " << num_pruned << endl;
 }
 
-} // namespace AHCParser
+} // namespace Ckylark
 

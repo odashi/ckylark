@@ -4,7 +4,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 unsigned int Tracer::trace_level_ = 0;
 
@@ -31,5 +31,5 @@ void Tracer::setTraceLevel(unsigned int value) {
     trace_level_ = value;
 }
 
-} // namespace AHCParser
+} // namespace Ckylark
 

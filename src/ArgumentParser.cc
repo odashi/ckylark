@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 ArgumentParser::ArgumentParser(const string & usage)
     : parsed_(false)
@@ -267,5 +267,5 @@ double ArgumentParser::getReal(const string & name) const {
     return ent.real_value;
 }
 
-} // namespace AHCParser
+} // namespace Ckylark
 

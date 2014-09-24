@@ -7,7 +7,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 Lexicon::Lexicon(const TagSet & tag_set, int level)
     : tag_set_(tag_set)
@@ -89,5 +89,5 @@ LexiconEntry & Lexicon::getEntryOrCreate(int tag_id, int word_id) {
     return *ent;
 }
 
-} // namespace AHCParser
+} // namespace Ckylark
 

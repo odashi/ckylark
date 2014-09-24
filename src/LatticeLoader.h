@@ -1,5 +1,5 @@
-#ifndef AHCP_LATTICE_LOADER_H_
-#define AHCP_LATTICE_LOADER_H_
+#ifndef CKYLARK_LATTICE_LOADER_H_
+#define CKYLARK_LATTICE_LOADER_H_
 
 #include "Lattice.h"
 
@@ -7,7 +7,7 @@
 #include <memory>
 #include <stdexcept>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class LatticeLoader {
 
@@ -30,7 +30,7 @@ private:
 
 }; // class LatticeLoader
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_LATTICE_LOADER_H_
+#endif // CKYLARK_LATTICE_LOADER_H_
 

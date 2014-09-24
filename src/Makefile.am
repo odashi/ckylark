@@ -1,6 +1,6 @@
-bin_PROGRAMS = ahcparse
+bin_PROGRAMS = ckylark
 
-ahcparse_SOURCES = \
+ckylark_SOURCES = \
     ArgumentParser.cc \
     ArgumentParser.h \
     Dictionary.cc \

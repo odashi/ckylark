@@ -2,9 +2,9 @@
 *.o
 .deps
 aclocal.m4
-ahcparse
 autom4te.cache
 autoscan.log
+ckylark
 config.*
 configure
 depcomp

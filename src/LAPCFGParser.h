@@ -1,5 +1,5 @@
-#ifndef AHCP_LAPCFG_PARSER_H_
-#define AHCP_LAPCFG_PARSER_H_
+#ifndef CKYLARK_LAPCFG_PARSER_H_
+#define CKYLARK_LAPCFG_PARSER_H_
 
 #include "CKYTable.h"
 #include "Dictionary.h"
@@ -14,7 +14,7 @@
 #include <string>
 #include <vector>
 
-namespace AHCParser {
+namespace Ckylark {
 
 class LAPCFGParser {
 
@@ -103,7 +103,7 @@ private:
 
 }; // struct Model
 
-} // namespace AHCParser
+} // namespace Ckylark
 
-#endif // AHCP_LAPCFG_PARSER_H_
+#endif // CKYLARK_LAPCFG_PARSER_H_
 

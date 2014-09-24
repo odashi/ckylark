@@ -2,7 +2,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 string Formatter::ToPennTreeBank(
     const Tree<string> & parse,
@@ -38,4 +38,4 @@ string Formatter::escapeForPennTreeBank(const string & raw) {
     return escaped;
 }
 
-} // namespace AHCParser
+} // namespace Ckylark

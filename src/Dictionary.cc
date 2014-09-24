@@ -6,7 +6,7 @@
 
 using namespace std;
 
-namespace AHCParser {
+namespace Ckylark {
 
 Dictionary::Dictionary() {}
 
@@ -36,5 +36,5 @@ string Dictionary::getWord(int id) const {
     return rev_[id];
 }
 
-} // namespace AHCParser
+} // namespace Ckylark
 
