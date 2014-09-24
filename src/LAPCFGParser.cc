@@ -619,17 +619,17 @@ void LAPCFGParser::calculateInsideScores(
                                     if (!allowed.at(begin, mid, ltag)[lsub]) continue;
                                     auto & score_list_pl = score_list_p[lsub];
                                     if (score_list_pl.empty()) continue;
+                                    double left_score = inside.at(begin, mid, ltag)[lsub];
+                                    if (left_score == 0.0) continue;
                     
                                     for (int rsub = 0; rsub < num_rsub; ++rsub) {
                                         if (!allowed.at(mid, end, rtag)[rsub]) continue;
-
                                         double rule_score = score_list_pl[rsub];
                                         if (rule_score == 0.0) continue;
+                                        double right_score = inside.at(mid, end, rtag)[rsub];
+                                        if (right_score == 0.0) continue;
                             
-                                        sum +=
-                                            rule_score *
-                                            inside.at(begin, mid, ltag)[lsub] *
-                                            inside.at(mid, end, rtag)[rsub];
+                                        sum += rule_score * left_score * right_score;
                                         changed = true;
                                     }
                                 }
@@ -787,6 +787,8 @@ void LAPCFGParser::calculateOutsideScores(
 
                     for (int psub = 0; psub < num_psub; ++psub) {
                         if (!allowed.at(begin, end, ptag)[psub]) continue;
+                        double parent_score = outside.at(begin, end, ptag)[psub];
+                        if (parent_score == 0.0) continue;
 
                         for (const BinaryRule * rule : binary_rules_p) {
                             int ltag = rule->left();
@@ -816,20 +818,18 @@ void LAPCFGParser::calculateOutsideScores(
                                     if (!allowed.at(begin, mid, ltag)[lsub]) continue;
                                     auto & score_list_pl = score_list_p[lsub];
                                     if (score_list_pl.empty()) continue;
+                                    double left_score = inside.at(begin, mid, ltag)[lsub];
+                                    if (left_score == 0.0) continue;
 
                                     for (int rsub = 0; rsub < num_rsub; ++rsub) {
                                         if (!allowed.at(mid, end, rtag)[rsub]) continue;
-
                                         double rule_score = score_list_pl[rsub];
                                         if (rule_score == 0.0) continue;
+                                        double right_score = inside.at(mid, end, rtag)[rsub];
+                                        if (right_score == 0.0) continue;
 
-                                        double parent_score = outside.at(begin, end, ptag)[psub];
-                                        outside.at(begin, mid, ltag)[lsub] +=
-                                            rule_score * parent_score *
-                                            inside.at(mid, end, rtag)[rsub];
-                                        outside.at(mid, end, rtag)[rsub] +=
-                                            rule_score * parent_score *
-                                            inside.at(begin, mid, ltag)[lsub];
+                                        outside.at(begin, mid, ltag)[lsub] += rule_score * parent_score * right_score;
+                                        outside.at(mid, end, rtag)[rsub] += rule_score * parent_score * left_score;
                                     }
                                 }
                             }
