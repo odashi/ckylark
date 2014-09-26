@@ -614,19 +614,24 @@ void LAPCFGParser::calculateInsideScores(
                             for (int mid = min; mid <= max; ++mid) {
                                 if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
                                 if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
+
+                                auto & allowed_lsubs = allowed.at(begin, mid, ltag);
+                                auto & allowed_rsubs = allowed.at(mid, end, rtag);
+                                auto & inside_lsubs = inside.at(begin, mid, ltag);
+                                auto & inside_rsubs = inside.at(mid, end, rtag);
                         
                                 for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                    if (!allowed.at(begin, mid, ltag)[lsub]) continue;
+                                    if (!allowed_lsubs[lsub]) continue;
                                     auto & score_list_pl = score_list_p[lsub];
                                     if (score_list_pl.empty()) continue;
-                                    double left_score = inside.at(begin, mid, ltag)[lsub];
+                                    double left_score = inside_lsubs[lsub];
                                     if (left_score == 0.0) continue;
                     
                                     for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                        if (!allowed.at(mid, end, rtag)[rsub]) continue;
+                                        if (!allowed_rsubs[rsub]) continue;
                                         double rule_score = score_list_pl[rsub];
                                         if (rule_score == 0.0) continue;
-                                        double right_score = inside.at(mid, end, rtag)[rsub];
+                                        double right_score = inside_rsubs[rsub];
                                         if (right_score == 0.0) continue;
                             
                                         sum += rule_score * left_score * right_score;
@@ -813,23 +818,30 @@ void LAPCFGParser::calculateOutsideScores(
                             for (int mid = min; mid <= max; ++mid) {
                                 if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
                                 if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
-                    
+
+                                auto & allowed_lsubs = allowed.at(begin, mid, ltag);
+                                auto & allowed_rsubs = allowed.at(mid, end, rtag);
+                                auto & inside_lsubs = inside.at(begin, mid, ltag);
+                                auto & inside_rsubs = inside.at(mid, end, rtag);
+                                auto & outside_lsubs = outside.at(begin, mid, ltag);
+                                auto & outside_rsubs = outside.at(mid, end, rtag);
+
                                 for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                    if (!allowed.at(begin, mid, ltag)[lsub]) continue;
+                                    if (!allowed_lsubs[lsub]) continue;
                                     auto & score_list_pl = score_list_p[lsub];
                                     if (score_list_pl.empty()) continue;
-                                    double left_score = inside.at(begin, mid, ltag)[lsub];
+                                    double left_score = inside_lsubs[lsub];
                                     if (left_score == 0.0) continue;
 
                                     for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                        if (!allowed.at(mid, end, rtag)[rsub]) continue;
+                                        if (!allowed_rsubs[rsub]) continue;
                                         double rule_score = score_list_pl[rsub];
                                         if (rule_score == 0.0) continue;
-                                        double right_score = inside.at(mid, end, rtag)[rsub];
+                                        double right_score = inside_rsubs[rsub];
                                         if (right_score == 0.0) continue;
 
-                                        outside.at(begin, mid, ltag)[lsub] += rule_score * parent_score * right_score;
-                                        outside.at(mid, end, rtag)[rsub] += rule_score * parent_score * left_score;
+                                        outside_lsubs[lsub] += rule_score * parent_score * right_score;
+                                        outside_rsubs[rsub] += rule_score * parent_score * left_score;
                                     }
                                 }
                             }
