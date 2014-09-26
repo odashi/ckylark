@@ -70,33 +70,38 @@ private:
     std::vector<int> makeWordIDList(const std::vector<std::string> & sentence) const;
 
     void initializeCharts(
-        CKYTable<std::vector<bool> > & allowed,
+        CKYTable<bool> & allowed_tag,
+        CKYTable<std::vector<bool> > & allowed_sub,
         CKYTable<std::vector<double> > & inside,
         CKYTable<std::vector<double> > & outside,
         std::vector<std::vector<Extent> > & extent,
         int cur_level) const;
 
     void setInsideScoresByLexicon(
-        const CKYTable<std::vector<bool> > & allowed,
+        const CKYTable<bool> & allowed_tag,
+        const CKYTable<std::vector<bool> > & allowed_sub,
         CKYTable<std::vector<double> > & inside,
         const std::vector<int> & wid_list,
         int cur_level) const;
 
     void calculateInsideScores(
-        const CKYTable<std::vector<bool> > & allowed,
+        const CKYTable<bool> & allowed_tag,
+        const CKYTable<std::vector<bool> > & allowed_sub,
         CKYTable<std::vector<double> > & inside,
         std::vector<std::vector<Extent> > & extent,
         int cur_level) const;
 
     void calculateOutsideScores(
-        const CKYTable<std::vector<bool> > & allowed,
+        const CKYTable<bool> & allowed_tag,
+        const CKYTable<std::vector<bool> > & allowed_sub,
         const CKYTable<std::vector<double> > & inside,
         CKYTable<std::vector<double> > & outside,
         std::vector<std::vector<Extent> > & extent,
         int cur_level) const;
 
     void pruneCharts(
-        CKYTable<std::vector<bool> > & allowed,
+        CKYTable<bool> & allowed_tag,
+        CKYTable<std::vector<bool> > & allowed_sub,
         const CKYTable<std::vector<double> > & inside,
         const CKYTable<std::vector<double> > & outside,
         int cur_level) const;

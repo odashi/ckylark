@@ -132,7 +132,8 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
 
     vector<int> wid_list = makeWordIDList(sentence);
 
-    CKYTable<vector<bool> > allowed(num_words, num_tags);
+    CKYTable<bool> allowed_tag(num_words, num_tags);
+    CKYTable<vector<bool> > allowed_sub(num_words, num_tags);
     CKYTable<vector<double> > inside(num_words, num_tags);
     CKYTable<vector<double> > outside(num_words, num_tags);
     vector<vector<Extent> > extent(num_words + 1, vector<Extent>(num_tags, {
@@ -144,9 +145,9 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     // pre-parsing
 
     for (int level = 0; level <= fine_level_; ++level) {
-        initializeCharts(allowed, inside, outside, extent, level);
-        setInsideScoresByLexicon(allowed, inside, wid_list, level);
-        calculateInsideScores(allowed, inside, extent, level);
+        initializeCharts(allowed_tag, allowed_sub, inside, outside, extent, level);
+        setInsideScoresByLexicon(allowed_tag, allowed_sub, inside, wid_list, level);
+        calculateInsideScores(allowed_tag, allowed_sub, inside, extent, level);
 
         // check if all possible parses are pruned
         double sentence_score = inside.at(0, num_words, root_tag)[0];
@@ -155,8 +156,8 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
             return getDefaultParse();
         }
 
-        calculateOutsideScores(allowed, inside, outside, extent, level);
-        pruneCharts(allowed, inside, outside, level);
+        calculateOutsideScores(allowed_tag, allowed_sub, inside, outside, extent, level);
+        pruneCharts(allowed_tag, allowed_sub, inside, outside, level);
 
         //fprintf(stderr, "pre-parse %d ... ROOT: %e\n", level, inside[0][num_words][root_tag][0]);
     } // level
@@ -191,6 +192,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                 // process binary rules
 
                 for (int ptag = 0; ptag < num_tags; ++ptag) {
+                    if (!allowed_tag.at(begin, end, ptag)) continue;
                     if (fine_lexicon.hasEntry(ptag)) continue; // semi-terminal
                     auto & binary_rules_p = fine_grammar.getBinaryRuleList(ptag);
                     int num_psub = tag_set_->numSubtags(ptag, fine_level_);
@@ -216,6 +218,8 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                         double old_log_score = maxc_log_score.at(begin, end, ptag);
 
                         for (int mid = min; mid <= max; ++mid) {
+                            if (!allowed_tag.at(begin, mid, ltag)) continue;
+                            if (!allowed_tag.at(mid, end, rtag)) continue;
                             if (mid - begin > 1 && fine_lexicon.hasEntry(ltag)) continue; // semi-terminal
                             if (end - mid > 1 && fine_lexicon.hasEntry(rtag)) continue; // semi-terminal
                             double cur_log_score =
@@ -226,20 +230,20 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                             double rule_score = 0.0;
 
                             for (int psub = 0; psub < num_psub; ++psub) {
-                                if (!allowed.at(begin, end, ptag)[psub]) continue;
+                                if (!allowed_sub.at(begin, end, ptag)[psub]) continue;
                                 auto & score_list_p = score_list[psub];
                                 if (score_list_p.empty()) continue;
 
                                 double po = outside.at(begin, end, ptag)[psub];
 
                                 for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                    if (!allowed.at(begin, mid, ltag)[lsub]) continue;
+                                    if (!allowed_sub.at(begin, mid, ltag)[lsub]) continue;
                                     auto & score_list_pl = score_list_p[lsub];
                                     if (score_list_pl.empty()) continue;
                                     double li = inside.at(begin, mid, ltag)[lsub];
 
                                     for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                        if (!allowed.at(mid, end, rtag)[rsub]) continue;
+                                        if (!allowed_sub.at(mid, end, rtag)[rsub]) continue;
                                         double ri = inside.at(mid, end, rtag)[rsub];
                                         double beta = score_list_pl[rsub];
                                         rule_score += po * li * ri * beta;
@@ -265,6 +269,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                 // process lexicon
 
                 for (int tag = 0; tag < num_tags; ++tag) {
+                    if (!allowed_tag.at(begin, end, tag)) continue;
                     int wid = wid_list[begin];
                     const LexiconEntry * ent_word = fine_lexicon.getEntry(tag, wid);
                     const LexiconEntry * ent_unk = fine_lexicon.getEntry(tag, -1);
@@ -273,7 +278,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                     double rule_score = 0.0;
 
                     for (int sub = 0; sub < num_sub; ++sub) {
-                        if (!allowed.at(begin, end, tag)[sub]) continue;
+                        if (!allowed_sub.at(begin, end, tag)[sub]) continue;
                         double po = outside.at(begin, end, tag)[sub];
                         double beta =
                             (1.0 - smooth_unklex_) * (ent_word ? ent_word->getScore(sub) : 0.0) +
@@ -295,12 +300,14 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
             }
 
             for (int ptag = 0; ptag < num_tags; ++ptag) {
+                if (!allowed_tag.at(begin, end, ptag)) continue;
                 if (fine_lexicon.hasEntry(ptag)) continue; // semi-terminal
                 auto & unary_rules_p = fine_grammar.getUnaryRuleListByPC()[ptag];
                 int num_psub = tag_set_->numSubtags(ptag, fine_level_);
                 
                 for (const UnaryRule * rule : unary_rules_p) {
                     int ctag = rule->child();
+                    if (!allowed_tag.at(begin, end, ctag)) continue;
                     if (len > 1 && fine_lexicon.hasEntry(ctag)) continue; // semi-terminal
                     if (ctag == ptag) continue;
                     auto & score_list = rule->getScoreList();
@@ -312,13 +319,13 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
                     double rule_score = 0.0;
 
                     for (int psub = 0; psub < num_psub; ++psub) {
-                        if (!allowed.at(begin, end, ptag)[psub]) continue;
+                        if (!allowed_sub.at(begin, end, ptag)[psub]) continue;
                         auto & score_list_p = score_list[psub];
                         if (score_list_p.empty()) continue;
                         double po = outside.at(begin, end, ptag)[psub];
                         
                         for (int csub = 0; csub < num_csub; ++csub) {
-                            if (!allowed.at(begin, end, ctag)[csub]) continue;
+                            if (!allowed_sub.at(begin, end, ctag)[csub]) continue;
                             double ci = inside.at(begin, end, ctag)[csub];
                             double beta = score_list_p[csub];
                             rule_score += po * ci * beta;
@@ -481,14 +488,15 @@ vector<int> LAPCFGParser::makeWordIDList(const vector<string> & sentence) const 
 }
 
 void LAPCFGParser::initializeCharts(
-    CKYTable<vector<bool> > & allowed,
+    CKYTable<bool> & allowed_tag,
+    CKYTable<vector<bool> > & allowed_sub,
     CKYTable<vector<double> > & inside,
     CKYTable<vector<double> > & outside,
     vector<vector<Extent> > & extent,
     int cur_level) const {
 
-    const int num_words = allowed.numWords();
-    const int num_tags = allowed.numTags();
+    const int num_words = allowed_tag.numWords();
+    const int num_tags = allowed_tag.numTags();
    
     unique_ptr<Mapping> mapping(nullptr);
     if (cur_level > 0) {
@@ -504,18 +512,19 @@ void LAPCFGParser::initializeCharts(
                 if (cur_level > 0) {
                     // initialize subtag constraints
                     int num_subtags_coarse = tag_set_->numSubtags(tag, cur_level - 1);
-                    vector<bool> & allowed_fine = allowed.at(begin, end, tag);
-                    vector<bool> allowed_coarse = allowed_fine;
-                    allowed_fine.assign(num_subtags_fine, false);
+                    vector<bool> & allowed_sub_fine = allowed_sub.at(begin, end, tag);
+                    vector<bool> allowed_sub_coarse = allowed_sub_fine;
+                    allowed_sub_fine.assign(num_subtags_fine, false);
                     for (int subtag_coarse = 0; subtag_coarse < num_subtags_coarse; ++subtag_coarse) {
-                        if (!allowed_coarse[subtag_coarse]) continue;
+                        if (!allowed_sub_coarse[subtag_coarse]) continue;
                         for (int subtag_fine : mapping->getCoarseToFineMaps(tag, subtag_coarse)) {
-                            allowed_fine[subtag_fine] = true;
+                            allowed_sub_fine[subtag_fine] = true;
                         }
                     }
                 } else {
                     // only 1 subtag is possible for the first time
-                    allowed.at(begin, end, tag).assign(num_subtags_fine, true);
+                    allowed_tag.at(begin, end, tag) = true;
+                    allowed_sub.at(begin, end, tag).assign(num_subtags_fine, true);
                 }
             }
         }
@@ -531,13 +540,14 @@ void LAPCFGParser::initializeCharts(
 }
 
 void LAPCFGParser::setInsideScoresByLexicon(
-    const CKYTable<vector<bool> > & allowed,
+    const CKYTable<bool> & allowed_tag,
+    const CKYTable<vector<bool> > & allowed_sub,
     CKYTable<vector<double> > & inside,
     const vector<int> & wid_list,
     int cur_level) const {
 
-    const int num_words = allowed.numWords();
-    const int num_tags = allowed.numTags();
+    const int num_words = allowed_tag.numWords();
+    const int num_tags = allowed_tag.numTags();
     const Lexicon & cur_lexicon = getLexicon(cur_level);
 
     for (int begin = 0; begin < num_words; ++begin) {
@@ -545,13 +555,14 @@ void LAPCFGParser::setInsideScoresByLexicon(
         int wid = wid_list[begin];
         
         for (int tag = 0; tag < num_tags; ++tag) {
+            if (!allowed_tag.at(begin, end, tag)) continue;
             const LexiconEntry * ent_word = cur_lexicon.getEntry(tag, wid);
             const LexiconEntry * ent_unk = cur_lexicon.getEntry(tag, -1);
             if (!ent_word && !ent_unk) continue;
             int num_sub = tag_set_->numSubtags(tag, cur_level);
             
             for (int sub = 0; sub < num_sub; ++sub) {
-                if (!allowed.at(begin, end, tag)[sub]) continue;
+                if (!allowed_sub.at(begin, end, tag)[sub]) continue;
                 inside.at(begin, end, tag)[sub] =
                     (1.0 - smooth_unklex_) * (ent_word ? ent_word->getScore(sub) : 0.0) +
                     smooth_unklex_ * (ent_unk ? ent_unk->getScore(sub) : 0.0);
@@ -564,13 +575,14 @@ void LAPCFGParser::setInsideScoresByLexicon(
 }
 
 void LAPCFGParser::calculateInsideScores(
-    const CKYTable<vector<bool> > & allowed,
+    const CKYTable<bool> & allowed_tag,
+    const CKYTable<vector<bool> > & allowed_sub,
     CKYTable<vector<double> > & inside,
     vector<vector<Extent> > & extent,
     int cur_level) const {
 
-    const int num_words = allowed.numWords();
-    const int num_tags = allowed.numTags();
+    const int num_words = allowed_tag.numWords();
+    const int num_tags = allowed_tag.numTags();
     const Lexicon & cur_lexicon = getLexicon(cur_level);
     const Grammar & cur_grammar = getGrammar(cur_level);
 
@@ -582,13 +594,14 @@ void LAPCFGParser::calculateInsideScores(
 
             if (len > 1) {
                 for (int ptag = 0; ptag < num_tags; ++ptag) {
+                    if (!allowed_tag.at(begin, end, ptag)) continue;
                     if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
                     auto & binary_rules_p = cur_grammar.getBinaryRuleList(ptag);
                     int num_psub = tag_set_->numSubtags(ptag, cur_level);
                     bool changed = false;
                 
                     for (int psub = 0; psub < num_psub; ++psub) {
-                        if (!allowed.at(begin, end, ptag)[psub]) continue;
+                        if (!allowed_sub.at(begin, end, ptag)[psub]) continue;
                         double sum = 0.0;
 
                         for (const BinaryRule * rule : binary_rules_p) {
@@ -612,23 +625,25 @@ void LAPCFGParser::calculateInsideScores(
                             if (score_list_p.empty()) continue;
                             
                             for (int mid = min; mid <= max; ++mid) {
+                                if (!allowed_tag.at(begin, mid, ltag)) continue;
+                                if (!allowed_tag.at(mid, end, rtag)) continue;
                                 if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
                                 if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
 
-                                auto & allowed_lsubs = allowed.at(begin, mid, ltag);
-                                auto & allowed_rsubs = allowed.at(mid, end, rtag);
+                                auto & allowed_sub_lsubs = allowed_sub.at(begin, mid, ltag);
+                                auto & allowed_sub_rsubs = allowed_sub.at(mid, end, rtag);
                                 auto & inside_lsubs = inside.at(begin, mid, ltag);
                                 auto & inside_rsubs = inside.at(mid, end, rtag);
                         
                                 for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                    if (!allowed_lsubs[lsub]) continue;
+                                    if (!allowed_sub_lsubs[lsub]) continue;
                                     auto & score_list_pl = score_list_p[lsub];
                                     if (score_list_pl.empty()) continue;
                                     double left_score = inside_lsubs[lsub];
                                     if (left_score == 0.0) continue;
                     
                                     for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                        if (!allowed_rsubs[rsub]) continue;
+                                        if (!allowed_sub_rsubs[rsub]) continue;
                                         double rule_score = score_list_pl[rsub];
                                         if (rule_score == 0.0) continue;
                                         double right_score = inside_rsubs[rsub];
@@ -666,16 +681,18 @@ void LAPCFGParser::calculateInsideScores(
             vector<vector<double> > delta_unary(num_tags);
 
             for (int ptag = 0; ptag < num_tags; ++ptag) {
+                if (!allowed_tag.at(begin, end, ptag)) continue;
                 if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
                 auto & unary_rules_p = cur_grammar.getUnaryRuleListByPC()[ptag];
                 int num_psub = tag_set_->numSubtags(ptag, cur_level);
                 delta_unary[ptag].assign(num_psub, 0.0);
                 
                 for (int psub = 0; psub < num_psub; ++psub) {
-                    if (!allowed.at(begin, end, ptag)[psub]) continue;
+                    if (!allowed_sub.at(begin, end, ptag)[psub]) continue;
 
                     for (const UnaryRule * rule : unary_rules_p) {
                         int ctag = rule->child();
+                        if (!allowed_tag.at(begin, end, ctag)) continue;
                         if (len > 1 && cur_lexicon.hasEntry(ctag)) continue; // semi-terminal
                         if (ctag == ptag) continue;
                         int num_csub = tag_set_->numSubtags(ctag, cur_level);
@@ -683,7 +700,7 @@ void LAPCFGParser::calculateInsideScores(
                         if (score_list_p.empty()) continue;
                         
                         for (int csub = 0; csub < num_csub; ++csub) {
-                            if (!allowed.at(begin, end, ctag)[csub]) continue;
+                            if (!allowed_sub.at(begin, end, ctag)[csub]) continue;
                             delta_unary[ptag][psub] +=
                                 score_list_p[csub] *
                                 inside.at(begin, end, ctag)[csub];
@@ -693,10 +710,11 @@ void LAPCFGParser::calculateInsideScores(
             }
 
             for (int ptag = 0; ptag < num_tags; ++ptag) {
+                if (!allowed_tag.at(begin, end, ptag)) continue;
                 if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
                 int num_psub = tag_set_->numSubtags(ptag, cur_level);
                 for (int psub = 0; psub < num_psub; ++psub) {
-                    if (!allowed.at(begin, end, ptag)[psub]) continue;
+                    if (!allowed_sub.at(begin, end, ptag)[psub]) continue;
                     inside.at(begin, end, ptag)[psub] += delta_unary[ptag][psub];
                 }
             }
@@ -725,14 +743,15 @@ void LAPCFGParser::calculateInsideScores(
 }
 
 void LAPCFGParser::calculateOutsideScores(
-    const CKYTable<vector<bool> > & allowed,
+    const CKYTable<bool> & allowed_tag,
+    const CKYTable<vector<bool> > & allowed_sub,
     const CKYTable<vector<double> > & inside,
     CKYTable<vector<double> > & outside,
     vector<vector<Extent> > & extent,
     int cur_level) const {
 
-    const int num_words = allowed.numWords();
-    const int num_tags = allowed.numTags();
+    const int num_words = allowed_tag.numWords();
+    const int num_tags = allowed_tag.numTags();
     const int root_tag = tag_set_->getTagId("ROOT");
     const Lexicon & cur_lexicon = getLexicon(cur_level);
     const Grammar & cur_grammar = getGrammar(cur_level);
@@ -748,22 +767,24 @@ void LAPCFGParser::calculateOutsideScores(
             vector<vector<double> > delta_unary(num_tags);
 
             for (int ctag = 0; ctag < num_tags; ++ctag) {
+                if (!allowed_tag.at(begin, end, ctag)) continue;
                 if (len > 1 && cur_lexicon.hasEntry(ctag)) continue; // semi-terminal
                 auto & unary_rules_c = cur_grammar.getUnaryRuleListByCP()[ctag];
                 int num_csub = tag_set_->numSubtags(ctag, cur_level);
                 delta_unary[ctag].assign(num_csub, 0.0);
 
                 for (int csub = 0; csub < num_csub; ++csub) {
-                    if (!allowed.at(begin, end, ctag)[csub]) continue;
+                    if (!allowed_sub.at(begin, end, ctag)[csub]) continue;
                     
                     for (const UnaryRule * rule : unary_rules_c) {
                         int ptag = rule->parent();
+                        if (!allowed_tag.at(begin, end, ptag)) continue;
                         if (ptag == ctag) continue;
                         int num_psub = tag_set_->numSubtags(ptag, cur_level);
                         auto & score_list = rule->getScoreList();
 
                         for (int psub = 0; psub < num_psub; ++psub) {
-                            if (!allowed.at(begin, end, ptag)[psub]) continue;
+                            if (!allowed_sub.at(begin, end, ptag)[psub]) continue;
                             auto & score_list_p = score_list[psub];
                             if (score_list_p.empty()) continue;
                             delta_unary[ctag][csub] +=
@@ -775,6 +796,7 @@ void LAPCFGParser::calculateOutsideScores(
             }
 
             for (int ctag = 0; ctag < num_tags; ++ctag) {
+                if (!allowed_tag.at(begin, end, ctag)) continue;
                 if (len > 1 && cur_lexicon.hasEntry(ctag)) continue; // semi-terminal
                 int num_csub = tag_set_->numSubtags(ctag, cur_level);
                 for (int csub = 0; csub < num_csub; ++csub) {
@@ -786,12 +808,13 @@ void LAPCFGParser::calculateOutsideScores(
 
             if (len > 1) {
                 for (int ptag = 0; ptag < num_tags; ++ptag) {
+                    if (!allowed_tag.at(begin, end, ptag)) continue;
                     if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
                     auto & binary_rules_p = cur_grammar.getBinaryRuleList(ptag);
                     int num_psub = tag_set_->numSubtags(ptag, cur_level);
 
                     for (int psub = 0; psub < num_psub; ++psub) {
-                        if (!allowed.at(begin, end, ptag)[psub]) continue;
+                        if (!allowed_sub.at(begin, end, ptag)[psub]) continue;
                         double parent_score = outside.at(begin, end, ptag)[psub];
                         if (parent_score == 0.0) continue;
 
@@ -816,25 +839,27 @@ void LAPCFGParser::calculateOutsideScores(
                             if (score_list_p.empty()) continue;
 
                             for (int mid = min; mid <= max; ++mid) {
+                                if (!allowed_tag.at(begin, mid, ltag)) continue;
+                                if (!allowed_tag.at(mid, end, rtag)) continue;
                                 if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
                                 if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
 
-                                auto & allowed_lsubs = allowed.at(begin, mid, ltag);
-                                auto & allowed_rsubs = allowed.at(mid, end, rtag);
+                                auto & allowed_sub_lsubs = allowed_sub.at(begin, mid, ltag);
+                                auto & allowed_sub_rsubs = allowed_sub.at(mid, end, rtag);
                                 auto & inside_lsubs = inside.at(begin, mid, ltag);
                                 auto & inside_rsubs = inside.at(mid, end, rtag);
                                 auto & outside_lsubs = outside.at(begin, mid, ltag);
                                 auto & outside_rsubs = outside.at(mid, end, rtag);
 
                                 for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                    if (!allowed_lsubs[lsub]) continue;
+                                    if (!allowed_sub_lsubs[lsub]) continue;
                                     auto & score_list_pl = score_list_p[lsub];
                                     if (score_list_pl.empty()) continue;
                                     double left_score = inside_lsubs[lsub];
                                     if (left_score == 0.0) continue;
 
                                     for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                        if (!allowed_rsubs[rsub]) continue;
+                                        if (!allowed_sub_rsubs[rsub]) continue;
                                         double rule_score = score_list_pl[rsub];
                                         if (rule_score == 0.0) continue;
                                         double right_score = inside_rsubs[rsub];
@@ -865,13 +890,14 @@ void LAPCFGParser::calculateOutsideScores(
 }
 
 void LAPCFGParser::pruneCharts(
-    CKYTable<vector<bool> > & allowed,
+    CKYTable<bool> & allowed_tag,
+    CKYTable<vector<bool> > & allowed_sub,
     const CKYTable<vector<double> > & inside,
     const CKYTable<vector<double> > & outside,
     int cur_level) const {
     
-    const int num_words = allowed.numWords();
-    const int num_tags = allowed.numTags();
+    const int num_words = allowed_tag.numWords();
+    const int num_tags = allowed_tag.numTags();
     const int root_tag = tag_set_->getTagId("ROOT");
     //int num_pruned = 0;
 
@@ -887,6 +913,7 @@ void LAPCFGParser::pruneCharts(
 
             for (int tag = 0; tag < num_tags; ++tag) {
                 int num_sub = tag_set_->numSubtags(tag, cur_level);
+                bool joined = false;
 
                 for (int sub = 0; sub < num_sub; ++sub) {
                     double posterior =
@@ -894,9 +921,11 @@ void LAPCFGParser::pruneCharts(
                         outside.at(begin, end, tag)[sub] /
                         sentence_score;
                     if (posterior < prune_threshold_) {
-                        allowed.at(begin, end, tag)[sub] = false;
+                        allowed_sub.at(begin, end, tag)[sub] = false;
                         //++num_pruned;
                     }
+
+                    joined = joined || allowed_sub.at(begin, end, tag)[sub];
 
                     //if (score > best_score) {
                     //    best_score = score;
@@ -904,6 +933,8 @@ void LAPCFGParser::pruneCharts(
                     //    best_sub = sub;
                     //}
                 }
+
+                allowed_tag.at(begin, end, tag) = joined;
             }
 
             //fprintf(stderr, "best[%d:%d] ... %s[%d] = %e\n",
