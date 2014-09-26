@@ -1,0 +1,7 @@
+model/wsj.* model files are trained by Penn Treebank section 2-22
+using Berkeley Parser's GrammarTrainer.
+
+If you want to use this model on Ckylark, type below:
+    /path/to/ckylark --model /path/to/model/wsj
+
+
