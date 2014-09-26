@@ -586,9 +586,12 @@ void LAPCFGParser::calculateInsideScores(
                     auto & binary_rules_p = cur_grammar.getBinaryRuleList(ptag);
                     int num_psub = tag_set_->numSubtags(ptag, cur_level);
                     bool changed = false;
+
+                    const vector<bool> & allowed_psubs = allowed.at(begin, end, ptag);
+                    vector<double> & inside_psubs = inside.at(begin, end, ptag);
                 
                     for (int psub = 0; psub < num_psub; ++psub) {
-                        if (!allowed.at(begin, end, ptag)[psub]) continue;
+                        if (!allowed_psubs[psub]) continue;
                         double sum = 0.0;
 
                         for (const BinaryRule * rule : binary_rules_p) {
@@ -614,19 +617,24 @@ void LAPCFGParser::calculateInsideScores(
                             for (int mid = min; mid <= max; ++mid) {
                                 if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
                                 if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
+
+                                const vector<bool> & allowed_lsubs = allowed.at(begin, mid, ltag);
+                                vector<double> & inside_lsubs = inside.at(begin, mid, ltag);
+                                const vector<bool> & allowed_rsubs = allowed.at(mid, end, rtag);
+                                vector<double> & inside_rsubs = inside.at(mid, end, rtag);
                         
                                 for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                    if (!allowed.at(begin, mid, ltag)[lsub]) continue;
+                                    if (!allowed_lsubs[lsub]) continue;
                                     auto & score_list_pl = score_list_p[lsub];
                                     if (score_list_pl.empty()) continue;
-                                    double left_score = inside.at(begin, mid, ltag)[lsub];
+                                    double left_score = inside_lsubs[lsub];
                                     if (left_score == 0.0) continue;
                     
                                     for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                        if (!allowed.at(mid, end, rtag)[rsub]) continue;
+                                        if (!allowed_rsubs[rsub]) continue;
                                         double rule_score = score_list_pl[rsub];
                                         if (rule_score == 0.0) continue;
-                                        double right_score = inside.at(mid, end, rtag)[rsub];
+                                        double right_score = inside_rsubs[rsub];
                                         if (right_score == 0.0) continue;
                             
                                         sum += rule_score * left_score * right_score;
@@ -636,7 +644,7 @@ void LAPCFGParser::calculateInsideScores(
                             }
                         }
 
-                        inside.at(begin, end, ptag)[psub] = sum;
+                        inside_psubs[psub] = sum;
                     } // psub
 
                     if (!changed) continue;
@@ -665,9 +673,11 @@ void LAPCFGParser::calculateInsideScores(
                 auto & unary_rules_p = cur_grammar.getUnaryRuleListByPC()[ptag];
                 int num_psub = tag_set_->numSubtags(ptag, cur_level);
                 delta_unary[ptag].assign(num_psub, 0.0);
+
+                const vector<bool> & allowed_psubs = allowed.at(begin, end, ptag);
                 
                 for (int psub = 0; psub < num_psub; ++psub) {
-                    if (!allowed.at(begin, end, ptag)[psub]) continue;
+                    if (!allowed_psubs[psub]) continue;
 
                     for (const UnaryRule * rule : unary_rules_p) {
                         int ctag = rule->child();
@@ -676,12 +686,15 @@ void LAPCFGParser::calculateInsideScores(
                         int num_csub = tag_set_->numSubtags(ctag, cur_level);
                         auto & score_list_p = rule->getScoreList()[psub];
                         if (score_list_p.empty()) continue;
+
+                        const vector<bool> & allowed_csubs = allowed.at(begin, end, ctag);
+                        vector<double> & inside_csubs = inside.at(begin, end, ctag);
                         
                         for (int csub = 0; csub < num_csub; ++csub) {
-                            if (!allowed.at(begin, end, ctag)[csub]) continue;
+                            if (!allowed_csubs[csub]) continue;
                             delta_unary[ptag][psub] +=
                                 score_list_p[csub] *
-                                inside.at(begin, end, ctag)[csub];
+                                inside_csubs[csub];
                         }
                     }
                 }
@@ -690,9 +703,13 @@ void LAPCFGParser::calculateInsideScores(
             for (int ptag = 0; ptag < num_tags; ++ptag) {
                 if (cur_lexicon.hasEntry(ptag)) continue; // semi-terminal
                 int num_psub = tag_set_->numSubtags(ptag, cur_level);
+
+                const vector<bool> & allowed_psubs = allowed.at(begin, end, ptag);
+                vector<double> & inside_psubs = inside.at(begin, end, ptag);
+
                 for (int psub = 0; psub < num_psub; ++psub) {
-                    if (!allowed.at(begin, end, ptag)[psub]) continue;
-                    inside.at(begin, end, ptag)[psub] += delta_unary[ptag][psub];
+                    if (!allowed_psubs[psub]) continue;
+                    inside_psubs[psub] += delta_unary[ptag][psub];
                 }
             }
 
@@ -748,8 +765,10 @@ void LAPCFGParser::calculateOutsideScores(
                 int num_csub = tag_set_->numSubtags(ctag, cur_level);
                 delta_unary[ctag].assign(num_csub, 0.0);
 
+                const vector<bool> & allowed_csubs = allowed.at(begin, end, ctag);
+
                 for (int csub = 0; csub < num_csub; ++csub) {
-                    if (!allowed.at(begin, end, ctag)[csub]) continue;
+                    if (!allowed_csubs[csub]) continue;
                     
                     for (const UnaryRule * rule : unary_rules_c) {
                         int ptag = rule->parent();
@@ -757,13 +776,16 @@ void LAPCFGParser::calculateOutsideScores(
                         int num_psub = tag_set_->numSubtags(ptag, cur_level);
                         auto & score_list = rule->getScoreList();
 
+                        const vector<bool> & allowed_psubs = allowed.at(begin, end, ptag);
+                        vector<double> & outside_psubs = outside.at(begin, end, ptag);
+
                         for (int psub = 0; psub < num_psub; ++psub) {
-                            if (!allowed.at(begin, end, ptag)[psub]) continue;
+                            if (!allowed_psubs[psub]) continue;
                             auto & score_list_p = score_list[psub];
                             if (score_list_p.empty()) continue;
                             delta_unary[ctag][csub] +=
                                 score_list_p[csub] *
-                                outside.at(begin, end, ptag)[psub];
+                                outside_psubs[psub];
                         }
                     }
                 }
@@ -785,9 +807,12 @@ void LAPCFGParser::calculateOutsideScores(
                     auto & binary_rules_p = cur_grammar.getBinaryRuleList(ptag);
                     int num_psub = tag_set_->numSubtags(ptag, cur_level);
 
+                    const vector<bool> & allowed_psubs = allowed.at(begin, end, ptag);
+                    vector<double> & outside_psubs = outside.at(begin, end, ptag);
+
                     for (int psub = 0; psub < num_psub; ++psub) {
-                        if (!allowed.at(begin, end, ptag)[psub]) continue;
-                        double parent_score = outside.at(begin, end, ptag)[psub];
+                        if (!allowed_psubs[psub]) continue;
+                        double parent_score = outside_psubs[psub];
                         if (parent_score == 0.0) continue;
 
                         for (const BinaryRule * rule : binary_rules_p) {
@@ -813,23 +838,31 @@ void LAPCFGParser::calculateOutsideScores(
                             for (int mid = min; mid <= max; ++mid) {
                                 if (mid - begin > 1 && cur_lexicon.hasEntry(ltag)) continue; // semi-terminal
                                 if (end - mid > 1 && cur_lexicon.hasEntry(rtag)) continue; // semi-terminal
+
+                                const vector<bool> & allowed_lsubs = allowed.at(begin, mid, ltag);
+                                const vector<double> & inside_lsubs = inside.at(begin, mid, ltag);
+                                const vector<bool> & allowed_rsubs = allowed.at(mid, end, rtag);
+                                const vector<double> & inside_rsubs = inside.at(mid, end, rtag);
+
+                                vector<double> & outside_lsubs = outside.at(begin, mid, ltag);
+                                vector<double> & outside_rsubs = outside.at(mid, end, rtag);
                     
                                 for (int lsub = 0; lsub < num_lsub; ++lsub) {
-                                    if (!allowed.at(begin, mid, ltag)[lsub]) continue;
+                                    if (!allowed_lsubs[lsub]) continue;
                                     auto & score_list_pl = score_list_p[lsub];
                                     if (score_list_pl.empty()) continue;
-                                    double left_score = inside.at(begin, mid, ltag)[lsub];
+                                    double left_score = inside_lsubs[lsub];
                                     if (left_score == 0.0) continue;
 
                                     for (int rsub = 0; rsub < num_rsub; ++rsub) {
-                                        if (!allowed.at(mid, end, rtag)[rsub]) continue;
+                                        if (!allowed_rsubs[rsub]) continue;
                                         double rule_score = score_list_pl[rsub];
                                         if (rule_score == 0.0) continue;
-                                        double right_score = inside.at(mid, end, rtag)[rsub];
+                                        double right_score = inside_rsubs[rsub];
                                         if (right_score == 0.0) continue;
 
-                                        outside.at(begin, mid, ltag)[lsub] += rule_score * parent_score * right_score;
-                                        outside.at(mid, end, rtag)[rsub] += rule_score * parent_score * left_score;
+                                        outside_lsubs[lsub] += rule_score * parent_score * right_score;
+                                        outside_rsubs[rsub] += rule_score * parent_score * left_score;
                                     }
                                 }
                             }
