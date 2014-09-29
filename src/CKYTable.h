@@ -8,6 +8,10 @@ namespace Ckylark {
 template <class T>
 class CKYTable {
 
+    CKYTable() = delete;
+    CKYTable(const CKYTable &) = delete;
+    CKYTable & operator=(const CKYTable &) = delete;
+
 public:
     CKYTable(size_t num_words, size_t num_tags)
         : num_words_(num_words)

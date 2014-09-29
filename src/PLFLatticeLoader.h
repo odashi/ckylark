@@ -6,6 +6,9 @@
 namespace Ckylark {
 
 class PLFLatticeLoader : public LatticeLoader {
+    
+    PLFLatticeLoader(const PLFLatticeLoader &) = delete;
+    PLFLatticeLoader & operator =(const PLFLatticeLoader &) = delete;
 
 public:
     PLFLatticeLoader();

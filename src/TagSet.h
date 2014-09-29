@@ -13,8 +13,10 @@ namespace Ckylark {
 
 class TagSet {
 
-private:
     TagSet();
+    TagSet(const TagSet &) = delete;
+    TagSet & operator=(const TagSet &) = delete;
+
 public:
     ~TagSet();
 

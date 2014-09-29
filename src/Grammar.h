@@ -15,6 +15,7 @@ class Grammar {
 
     Grammar() = delete;
     Grammar(const Grammar &) = delete;
+    Grammar & operator=(const Grammar &) = delete;
 
 public:
     Grammar(const TagSet & tag_set, int level);

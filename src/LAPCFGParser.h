@@ -27,6 +27,7 @@ class LAPCFGParser {
 
     LAPCFGParser();
     LAPCFGParser(const LAPCFGParser &) = delete;
+    LAPCFGParser & operator=(const LAPCFGParser &) = delete;
 
 public:
     ~LAPCFGParser();

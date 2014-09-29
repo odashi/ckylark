@@ -9,6 +9,7 @@ class Tracer {
 
     Tracer() = delete;
     Tracer(const Tracer &) = delete;
+    Tracer & operator=(const Tracer &) = delete;
 
 public:
     static void print(unsigned int level, const std::string & text);

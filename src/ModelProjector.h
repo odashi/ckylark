@@ -13,6 +13,10 @@ namespace Ckylark {
 
 class ModelProjector {
 
+    ModelProjector() = delete;
+    ModelProjector(const ModelProjector &) = delete;
+    ModelProjector & operator=(const ModelProjector &) = delete;
+
 public:
     ModelProjector(
         const TagSet & tag_set,

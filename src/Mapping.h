@@ -9,6 +9,10 @@ namespace Ckylark {
 
 class Mapping {
 
+    Mapping() = delete;
+    Mapping(const Mapping &) = delete;
+    Mapping & operator=(const Mapping &) = delete;
+
 public:
     Mapping(const TagSet & tag_set, int coarse_level, int fine_level);
     ~Mapping();

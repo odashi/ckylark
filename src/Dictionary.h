@@ -9,6 +9,9 @@ namespace Ckylark {
 
 class Dictionary {
 
+    Dictionary(const Dictionary &) = delete;
+    Dictionary & operator=(const Dictionary &) = delete;
+
 public:
     Dictionary();
     ~Dictionary();

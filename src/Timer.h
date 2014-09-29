@@ -8,6 +8,7 @@ namespace Ckylark {
 class Timer {
 
     Timer(const Timer &) = delete;
+    Timer & operator=(const Timer &) = delete;
 
 public:
     Timer();

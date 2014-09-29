@@ -7,6 +7,10 @@ namespace Ckylark {
 
 class BinaryRule {
 
+    BinaryRule() = delete;
+    BinaryRule(const BinaryRule &) = delete;
+    BinaryRule & operator=(const BinaryRule &) = delete;
+
 public:
     BinaryRule(int parent, int left, int right, size_t nsub_parent, size_t nsub_left, size_t nsub_right)
         : parent_(parent)
@@ -69,6 +73,10 @@ private:
 
 class UnaryRule {
 
+    UnaryRule() = delete;
+    UnaryRule(const UnaryRule &) = delete;
+    UnaryRule & operator=(const UnaryRule &) = delete;
+
 public:
     UnaryRule(int parent, int child, size_t nsub_parent, size_t nsub_child)
         : parent_(parent)
@@ -115,8 +123,6 @@ private:
     std::vector<std::vector<double> > score_;
 
 }; // class UnaryRule
-
-
 
 } // namespace Ckylark
 

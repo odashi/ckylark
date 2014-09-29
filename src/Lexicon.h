@@ -13,6 +13,10 @@ namespace Ckylark {
 
 class LexiconEntry {
 
+    LexiconEntry() = delete;
+    LexiconEntry(const LexiconEntry &) = delete;
+    LexiconEntry & operator=(const LexiconEntry &) = delete;
+
 public:
     LexiconEntry(int tag_id, int word_id, size_t num_subtags)
         : tag_id_(tag_id)
@@ -41,6 +45,7 @@ class Lexicon {
 
     Lexicon() = delete;
     Lexicon(const Lexicon &) = delete;
+    Lexicon & operator=(const Lexicon &) = delete;
 
 public:
     Lexicon(const TagSet & tag_set, int level);

@@ -11,6 +11,9 @@ namespace Ckylark {
 
 class LatticeLoader {
 
+    LatticeLoader(const LatticeLoader &) = delete;
+    LatticeLoader & operator=(const LatticeLoader &) = delete;
+
 public:
     LatticeLoader() : input_(nullptr) {}
     virtual ~LatticeLoader() {}

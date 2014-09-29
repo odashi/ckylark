@@ -13,6 +13,7 @@ namespace Ckylark {
 class Lattice {
 
     Lattice(const Lattice &) = delete;
+    Lattice & operator=(const Lattice &) = delete;
 
 public:
     struct Edge {

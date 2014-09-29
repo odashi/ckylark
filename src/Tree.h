@@ -27,6 +27,16 @@ public:
         }
     }
 
+    inline Tree & operator=(const Tree & src) {
+        for (Tree<T> * child : children_) {
+            delete child;
+        }
+        children_.clear();
+        for (const Tree<T> * child : src.children_) {
+            addChild(child->copyTree());
+        }
+    }
+
     inline bool isRoot() const { return !parent_; }
     inline bool isLeaf() const { return children_.size() == 0; }
     inline size_t numChildren() const { return children_.size(); }

@@ -11,6 +11,7 @@ class Formatter {
 
     Formatter() = delete;
     Formatter(const Formatter &) = delete;
+    Formatter & operator=(const Formatter &) = delete;
 
 public:
     static std::string ToPennTreeBank(

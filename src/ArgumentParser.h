@@ -27,6 +27,10 @@ class ArgumentParser {
         double real_value, real_default;
     }; // struct Entry
 
+    ArgumentParser() = delete;
+    ArgumentParser(const ArgumentParser &) = delete;
+    ArgumentParser & operator=(const ArgumentParser &) = delete;
+
 public:
     ArgumentParser(const std::string & bin_name);
     ~ArgumentParser();
