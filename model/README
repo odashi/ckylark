@@ -1,8 +1,17 @@
-model/wsj.* model files are trained by Penn Treebank section 2-22
-using Berkeley Parser's GrammarTrainer.
+This directory contains grammar files.
+
+model/jdc.*:
+    Japanese grammar model trained by Japanese Word Dependency
+    Corpus [Mori et al., 2014].
+
+model/wsj.*:
+    English grammar model trained by Penn Treebank section 2-22
+    [Marcus et al., 1993].
+
+These models are created using Berkeley Parser's GrammarTrainer.
 
 If you want to use this model on Ckylark, type below:
-    gzip -d /path/to/model/wsj.*
-    /path/to/ckylark --model /path/to/model/wsj
+    gzip -d /path/to/model/*
+    /path/to/ckylark --model /path/to/model/wsj (or jdc)
 
 
