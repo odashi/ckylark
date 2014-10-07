@@ -20,6 +20,7 @@ ckylark_SOURCES = \
     Mapping.h \
     ModelProjector.cc \
     ModelProjector.h \
+    ParserResult.h \
     PLFLatticeLoader.cc \
     PLFLatticeLoader.h \
     Rule.h \

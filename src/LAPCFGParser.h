@@ -7,6 +7,7 @@
 #include "Lexicon.h"
 #include "Grammar.h"
 #include "Tree.h"
+#include "ParserResult.h"
 
 #include <boost/multi_array.hpp>
 
@@ -34,7 +35,7 @@ public:
 
     static std::shared_ptr<LAPCFGParser> loadFromBerkeleyDump(const std::string & path);
 
-    std::shared_ptr<Tree<std::string> > parse(const std::vector<std::string> & sentence) const;
+    ParserResult parse(const std::vector<std::string> & sentence) const;
 
     const Dictionary & getWordTable() const { return *word_table_; }
     const TagSet & getTagSet() const { return *tag_set_; }

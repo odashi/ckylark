@@ -4,6 +4,7 @@
 #include "Mapping.h"
 #include "Timer.h"
 #include "Tracer.h"
+#include "ParserResult.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
@@ -103,10 +104,16 @@ int main(int argc, char * argv[]) {
         Tracer::println(1);
 
         timer.start();
-        shared_ptr<Tree<string> > parse = parser->parse(ls);
+        ParserResult result = parser->parse(ls);
+        if (!result.succeeded && result.final_level > 0) {
+            // get more coarse result
+            parser->setFineLevel(result.final_level - 1);
+            result = parser->parse(ls);
+            parser->setFineLevel(-1);
+        }
         double lap = timer.stop();
 
-        string repr = Formatter::ToPennTreeBank(*parse, ap->getSwitch("add-root-tag"));
+        string repr = Formatter::ToPennTreeBank(*result.best_parse, ap->getSwitch("add-root-tag"));
         
         Tracer::println(1, "  Parse: " + repr);
         Tracer::println(1, (boost::format("  Time: %.3fs") % lap).str());

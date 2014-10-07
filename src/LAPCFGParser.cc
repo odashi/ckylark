@@ -120,14 +120,14 @@ void LAPCFGParser::generateCoarseModels() {
     }
 }
 
-shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) const {
+ParserResult LAPCFGParser::parse(const vector<string> & sentence) const {
     const int num_words = sentence.size();
     const int num_tags = tag_set_->numTags();
     const int root_tag = tag_set_->getTagId("ROOT");
 
     // check empty sentence
     if (num_words == 0) {
-        return getDefaultParse();
+        return ParserResult { getDefaultParse(), true, -1 };
     }
 
     vector<int> wid_list = makeWordIDList(sentence);
@@ -153,7 +153,7 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
         double sentence_score = inside.at(0, num_words, root_tag)[0];
         if (sentence_score == 0.0) {
             Tracer::println(1, (boost::format("  No any possible parses (level=%d).") % level).str());
-            return getDefaultParse();
+            return ParserResult { getDefaultParse(), false, level };
         }
 
         calculateOutsideScores(allowed_tag, allowed_sub, inside, outside, extent, level);
@@ -443,10 +443,11 @@ shared_ptr<Tree<string> > LAPCFGParser::parse(const vector<string> & sentence) c
     };
 
     Tree<string> * parse = buildTree(0, num_words, root_tag, true);
-    if (parse) return shared_ptr<Tree<string> >(parse);
-    else {
+    if (parse) {
+        return ParserResult { shared_ptr<Tree<string> >(parse), true, fine_level_ };
+    } else {
         Tracer::println(1, "  No any possible max-rule parse.");
-        return getDefaultParse();
+        return ParserResult { getDefaultParse(), false, fine_level_ };
     }
 }
 
