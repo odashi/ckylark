@@ -9,17 +9,17 @@ About
 
 This software generates the phrase structure of given input
 sentence using latent annotated probabilistic context-free
-grammar (LAPCFG) model proposeed by [Petrov et al., 2006]
+grammar (LAPCFG) model proposed by [Petrov et al., 2006]
 [Petrov, 2009].
 
 Since original LAPCFG Parser sometimes makes failed parses in
-parsing time, our implementation avoids this problem using
+parse-time, our implementation avoids this problem using
 below approaches:
-* Using probabilities of unknown words for parsing-time
+* Using probabilities of unknown words for parse-time
   smoothing.
 * Rollbacking coarse grammar if parsing failed.
 
-Ckylark is a portmanteau of both "CKY" and "skylark."
+"Ckylark" is a portmanteau of both "CKY" and "skylark."
 
 
 Usage
