@@ -1,9 +1,15 @@
 [Mori et al., 2014]
 Shinsuke Mori, Hideki Ogura, and Tetsuro Sasada.
 A Japanese Word Dependency Corpus.
-in Proceedings of the 9th Edition of the Language Resources and Evaluation Conference, 2014.
+in Proceedings of the 9th Edition of the Language Resources and Evaluation Conference (LREC), 2014.
+
+[Neubig et al., 2011]
+Graham Neubig, Yosuke Nakata, Shinsuke Mori.
+Pointwise Prediction for Robust, Adaptable Japanese Morphological Analysis.
+in Proceedings of the 49th Annual Meeting of the Association for Computational Linguistics: Human Language Technologies (ACL-HLT), 2011.
 
 [Marcus et al., 1993]
 Mitchell P. Marcus, Mary Ann Marcinkiewicz, and Beatrice Santorini.
 Building a Large Annotated Corpus of English: The Penn Treebank.
 in Computational Linguistics, 1993.
+

@@ -1,7 +1,7 @@
 Ckylark
 =======
 
-Ckylark - CKY-based latent annotated rule ekstractor
+`Ckylark` - CKY-based latent annotated rule ekstractor
 
 
 About
@@ -13,13 +13,13 @@ grammar (LAPCFG) model proposed by [Petrov et al., 2006]
 [Petrov, 2009].
 
 Since original LAPCFG Parser sometimes makes failed parses in
-parse-time, our implementation avoids this problem using
+parse-time, `Ckylark` avoids this problem using
 below approaches:
 * Using probabilities of unknown words for parse-time
   smoothing.
 * Rollbacking coarse grammar if parsing failed.
 
-"Ckylark" is a portmanteau of both "CKY" and "skylark."
+`Ckylark` is a portmanteau of both "CKY" and "skylark."
 
 
 Install
@@ -37,17 +37,28 @@ You simply run below:
 Usage
 -----
 
-For simply use, you can type below command to parse your
-sentence:
+When you use the bundled model (`wsj` or `jdc`), decompress all
+files in `model` directory beforehand.
 
-    src/ckylark --model <model file> < <your corpus>
+For simply use, you can type below command to parse your
+sentences:
+
+    src/ckylark --model (model prefix) < (your word-segmented corpus)
 
 `--model` requires the prefix of model file like `model/wsj` in
 this repository.
-(if you need to parse Japanese, `model.jdc` instead)
+(`model/wsj` is English model. if you need to parse Japanese
+sentences, use `model/jdc` instead)
 
-You also can use your original models on Ckylark.
-Ckylark can uses the text dump files of original Berkeley Parser models.
+For example,
+
+    $ echo "This is a pen ." | src/ckylark --model model/wsj
+    ( (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN pen))) (. .)) )
+
+`Ckylark` uses the text dump files of original `Berkeley Parser`
+models.
+You can also use your original models made by `GrammarTrainer`
+and `WriteGrammarToTextFiles` of `Berkeley Parser`.
 
 If you want to see all options, please type below:
 

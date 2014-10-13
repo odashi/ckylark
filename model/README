@@ -3,6 +3,9 @@ This directory contains grammar files.
 model/jdc.*:
     Japanese grammar model trained by Japanese Word Dependency
     Corpus [Mori et al., 2014].
+    Word segmentation is done by KyTea [Neubig et al., 2011].
+    It requires that input sentences are segmented by KyTea
+    for correct parsing.
 
 model/wsj.*:
     English grammar model trained by Penn Treebank section 2-22
