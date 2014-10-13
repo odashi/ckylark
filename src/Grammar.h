@@ -36,6 +36,9 @@ public:
     inline const std::vector<std::vector<UnaryRule *> > & getUnaryRuleListByPC() const { return unary_parent_; }
     inline const std::vector<std::vector<UnaryRule *> > & getUnaryRuleListByCP() const { return unary_child_; }
 
+    // scaling factor for parser
+    double calculateScalingFactor() const;
+
 private:
     const TagSet & tag_set_;
     int level_;

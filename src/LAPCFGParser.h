@@ -61,6 +61,8 @@ private:
     double prune_threshold_;
     double smooth_unklex_;
 
+    double scaling_factor_;
+
     void loadWordTable(const std::string & path);
     void loadTagSet(const std::string & path);
     void loadLexicon(const std::string & path);

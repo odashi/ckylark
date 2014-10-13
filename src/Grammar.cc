@@ -2,6 +2,7 @@
 
 #include <boost/algorithm/string.hpp>
 
+#include <cmath>
 #include <map>
 #include <string>
 #include <iostream>
@@ -125,6 +126,37 @@ UnaryRule & Grammar::getUnaryRule(int parent, int child) {
     rules_p.push_back(rule);
     rules_c.push_back(rule);
     return *rule;
+}
+
+double Grammar::calculateScalingFactor() const {
+
+    // factor = exp -E_X[max_i,Y,Z log P(Xi -> Y Z)]
+
+    size_t n = 0;
+    double log_prod = 0.0;
+
+    for (auto& rules_p : binary_parent_) {
+        for (auto* rule : rules_p) {
+            double max_score = 0.0;
+            
+            for (auto& scores_p : rule->getScoreList()) {    
+                for (auto& scores_pl : scores_p) {
+                    for (double score : scores_pl) {
+                        if (score > max_score) {
+                            max_score = score;
+                        }
+                    }
+                }
+            }
+
+            if (max_score > 0.0) {
+                ++n;
+                log_prod += log(max_score);
+            }
+        }
+    }
+
+    return exp(-log_prod / static_cast<double>(n));
 }
 
 } // namespace Ckylark

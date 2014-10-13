@@ -15,6 +15,8 @@
 #include <limits>
 #include <stdexcept>
 
+#include <iostream> // for debug
+
 using namespace std;
 
 namespace Ckylark {
@@ -22,7 +24,8 @@ namespace Ckylark {
 LAPCFGParser::LAPCFGParser()
     : fine_level_(-1)
     , prune_threshold_(1e-5)
-    , smooth_unklex_(0) {
+    , smooth_unklex_(0)
+    , scaling_factor_(1.0) {
 }
 
 LAPCFGParser::~LAPCFGParser() {}
@@ -36,6 +39,9 @@ shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(const string & path)
     parser->loadGrammar(path + ".grammar");
     parser->generateCoarseModels();
     parser->setFineLevel(-1);
+
+    parser->scaling_factor_ = parser->grammar_[parser->tag_set_->getDepth() - 1]->calculateScalingFactor();
+    Tracer::println(1, (boost::format("Scaling Factor: %.6e") % parser->scaling_factor_).str());
 
     return parser;
 }
@@ -650,7 +656,7 @@ void LAPCFGParser::calculateInsideScores(
                                         double right_score = inside_rsubs[rsub];
                                         if (right_score == 0.0) continue;
                             
-                                        sum += rule_score * left_score * right_score;
+                                        sum += scaling_factor_ * rule_score * left_score * right_score;
                                         changed = true;
                                     }
                                 }
@@ -658,6 +664,11 @@ void LAPCFGParser::calculateInsideScores(
                         }
 
                         inside.at(begin, end, ptag)[psub] = sum;
+                        /*
+                        cout << (boost::format("%3d-%3d : %8s %3d = %.6e")
+                            % begin % end % tag_set_->getTagName(ptag) % psub
+                            % inside.at(begin, end, ptag)[psub]) << endl;
+                        */
                     } // psub
 
                     if (!changed) continue;
@@ -866,8 +877,9 @@ void LAPCFGParser::calculateOutsideScores(
                                         double right_score = inside_rsubs[rsub];
                                         if (right_score == 0.0) continue;
 
-                                        outside_lsubs[lsub] += rule_score * parent_score * right_score;
-                                        outside_rsubs[rsub] += rule_score * parent_score * left_score;
+                                        double common = scaling_factor_ * rule_score * parent_score;
+                                        outside_lsubs[lsub] += common * right_score;
+                                        outside_rsubs[rsub] += common * left_score;
                                     }
                                 }
                             }
