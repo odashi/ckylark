@@ -22,21 +22,36 @@ below approaches:
 "Ckylark" is a portmanteau of both "CKY" and "skylark."
 
 
+Install
+-------
+
+You need `autotools` to build Ckylark.
+You simply run below:
+
+    cd /path/to/Ckylark
+    autoreconf -i
+    ./configure
+    make
+
+
 Usage
 -----
 
 For simply use, you can type below command to parse your
 sentence:
 
-`src/ckylark --model <model file> < <your corpus>`
+    src/ckylark --model <model file> < <your corpus>
 
 `--model` requires the prefix of model file like `model/wsj` in
 this repository.
 (if you need to parse Japanese, `model.jdc` instead)
 
-You also can type below command to see all options:
+You also can use your original models on Ckylark.
+Ckylark can uses the text dump files of original Berkeley Parser models.
 
-`src/ckylark --help`
+If you want to see all options, please type below:
+
+    src/ckylark --help
 
 
 Contributors

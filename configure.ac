@@ -2,8 +2,8 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([ckylark], [0.2.0], [yus.takara@gmail.com])
-AM_INIT_AUTOMAKE([ckylark], [0.2.0])
+AC_INIT([ckylark], [0.3.0], [yus.takara@gmail.com])
+AM_INIT_AUTOMAKE([ckylark], [0.3.0])
 AC_CONFIG_SRCDIR([src/main.cc])
 AC_CONFIG_HEADERS([config.h])
 
