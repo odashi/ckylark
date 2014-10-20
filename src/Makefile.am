@@ -18,12 +18,15 @@ ckylark_SOURCES = \
     Lexicon.h \
     Mapping.cc \
     Mapping.h \
+    MaxScalingFactor.h \
+    MaxScalingFactor.cc \
     ModelProjector.cc \
     ModelProjector.h \
     ParserResult.h \
     PLFLatticeLoader.cc \
     PLFLatticeLoader.h \
     Rule.h \
+    ScalingFactor.h \
     TagSet.cc \
     TagSet.h \
     Timer.cc \
