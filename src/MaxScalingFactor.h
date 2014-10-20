@@ -14,7 +14,7 @@ public:
     MaxScalingFactor();
     ~MaxScalingFactor();
 
-    double calculate(const Grammar & grammar);
+    double calculate(const Lexicon & lexicon, const Grammar & grammar);
 
 }; // class MaxScalingFactor
 

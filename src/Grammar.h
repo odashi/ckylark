@@ -25,6 +25,8 @@ public:
 
     inline int getLevel() const { return level_; }
 
+    const TagSet & getTagSet() const { return tag_set_; }
+
     BinaryRule & getBinaryRule(int parent, int left, int right);
     UnaryRule & getUnaryRule(int parent, int child);
 
@@ -35,9 +37,6 @@ public:
     //inline const std::vector<std::vector<std::vector<BinaryRule *> > > & getBinaryRuleListByLRP() const { return binary_left_right_; }
     inline const std::vector<std::vector<UnaryRule *> > & getUnaryRuleListByPC() const { return unary_parent_; }
     inline const std::vector<std::vector<UnaryRule *> > & getUnaryRuleListByCP() const { return unary_child_; }
-
-    // scaling factor for parser
-    double calculateScalingFactor() const;
 
 private:
     const TagSet & tag_set_;

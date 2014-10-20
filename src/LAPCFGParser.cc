@@ -3,6 +3,7 @@
 #include "Mapping.h"
 #include "ModelProjector.h"
 #include "Tracer.h"
+#include "MaxScalingFactor.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
@@ -40,7 +41,11 @@ shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(const string & path)
     parser->generateCoarseModels();
     parser->setFineLevel(-1);
 
-    parser->scaling_factor_ = parser->grammar_[parser->tag_set_->getDepth() - 1]->calculateScalingFactor();
+    int finest_level = parser->tag_set_->getDepth() - 1;
+    auto & finest_lexicon = parser->getLexicon(finest_level);
+    auto & finest_grammar = parser->getGrammar(finest_level);
+    parser->scaling_factor_ = MaxScalingFactor().calculate(finest_lexicon, finest_grammar);
+
     Tracer::println(1, (boost::format("Scaling Factor: %.6e") % parser->scaling_factor_).str());
 
     return parser;
