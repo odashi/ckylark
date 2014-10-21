@@ -10,7 +10,7 @@ About
 This software generates the phrase structure of given input
 sentence using latent annotated probabilistic context-free
 grammar (LAPCFG) model proposed by [Petrov et al., 2006]
-[Petrov, 2009].
+[Petrov & Klein, 2007].
 
 Since original LAPCFG Parser sometimes makes failed parses in
 parse-time, `Ckylark` avoids this problem using

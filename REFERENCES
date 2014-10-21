@@ -1,12 +1,12 @@
 [Petrov et al., 2006]
-Slav Petrov, Leon Barrett, Romain Thibaux Dan Klein.
+Slav Petrov, Leon Barrett, Romain Thibaux and Dan Klein.
 Learning Accurate, Compact, and Interpretable Tree Annotation.
-in Proceedings of the 21st International Conference on Computational Linguistics and 44th Annual Meeting of the Association for Computational Linguistics, 2006.
+In Proc. COLING-ACL, 2006.
 
-[Petrov, 2009]
-Slav Orlinov Petrov.
-Coarse-to-Fine Natural Language Processing.
-Technical Report of UCB/EECS, 2009.
+[Petrov & Klein, 2007]
+Slav Petrov and Dan Klein.
+Learning and Inference for Hierarchically Split PCFGs.
+In Proc. AAAI, 2007.
 
 And we got many knowledgements from leading implements:
     * Berkeley Parser (http://code.google.com/p/berkeleyparser/)
