@@ -138,7 +138,7 @@ ParserResult LAPCFGParser::parse(const vector<string> & sentence) const {
     if (!result.succeeded && result.final_level > 0) {
         result = generateMaxRuleOneBestParse(sentence, result.final_level - 1);
     }
-    
+
     return result;
 }
 
@@ -422,19 +422,24 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
         }
     };
 
-    function<Tree<string> *(int, int, int, bool)> buildTree
-        = [&](int begin, int end, int ptag, bool first_time) -> Tree<string> * {
+    function<Tree<string> *(int, int, int, bool, int)> buildTree
+        = [&](int begin, int end, int ptag, bool first_time, int depth) -> Tree<string> * {
+
+        //for (int i = 0; i < depth; ++i) cout << ".  ";
+        //cout << begin << ' ' << end << ' ' << tag_set_->getTagName(ptag) << endl;
         
         if (ptag < 0) return nullptr; // for ptag = -1
 
         int ctag = maxc_child.at(begin, end, ptag);
+        if (ctag == -1 && ptag == root_tag) return nullptr;
 
         Tree<string> * parent_tree = nullptr;
 
         if (ctag != -1 && first_time) {
             // make unary derivation
 
-            Tree<string> * child_tree = buildTree(begin, end, ctag, false);
+            Tree<string> * child_tree = buildTree(begin, end, ctag, false, depth + 1);
+
             if (child_tree) {
                 parent_tree = new Tree<string>(tag_set_->getTagName(ptag));
                 addChildOrCoalesce(*parent_tree, child_tree);
@@ -445,8 +450,10 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
             int ltag = maxc_left.at(begin, end, ptag);
             int rtag = maxc_right.at(begin, end, ptag);
             int mid = maxc_mid.at(begin, end, ptag);
-            Tree<string> * left_tree = buildTree(begin, mid, ltag, true);
-            Tree<string> * right_tree = buildTree(mid, end, rtag, true);
+
+            Tree<string> * left_tree = buildTree(begin, mid, ltag, true, depth + 1);
+            Tree<string> * right_tree = buildTree(mid, end, rtag, true, depth + 1);
+            
             if (left_tree && right_tree) {
                 parent_tree = new Tree<string>(tag_set_->getTagName(ptag));
                 addChildOrCoalesce(*parent_tree, left_tree);
@@ -467,7 +474,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
         return parent_tree; // complete tree or nullptr
     };
 
-    Tree<string> * parse = buildTree(0, num_words, root_tag, true);
+    Tree<string> * parse = buildTree(0, num_words, root_tag, true, 0);
     if (parse) {
         return ParserResult { shared_ptr<Tree<string> >(parse), true, final_level_to_try };
     } else {
