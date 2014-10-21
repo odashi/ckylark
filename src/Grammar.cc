@@ -53,6 +53,11 @@ shared_ptr<Grammar> Grammar::loadFromStream(std::istream & stream, const TagSet 
 
         switch (ls.size()) {
         case 8: // binary
+            // ROOT tag must be the parent of unary rule
+            if (ls[0] == "ROOT") {
+                throw runtime_error("Grammar: ROOT must not be the parent of binary rule");
+            }
+
             pc = tag_set.getTagId(ls[0]);
             lc = tag_set.getTagId(ls[3]);
             rc = tag_set.getTagId(ls[5]);
@@ -60,7 +65,8 @@ shared_ptr<Grammar> Grammar::loadFromStream(std::istream & stream, const TagSet 
             lsc = stoi(ls[4]);
             rsc = stoi(ls[6]);
             score = stod(ls[7]);
-            //cout << "binary: " << pc << ' ' << lc << ' ' << rc << ' ' << psc << ' ' << lsc << ' ' << rsc << endl;
+            //cout << "binary: " << pc << ' ' << lc << ' ' << rc << ' ' << psc << ' ' << lsc << ' ' << rsc << endl; 
+
             if (cur_binary->parent() != pc || cur_binary->left() != lc || cur_binary->right() != rc) {
                 cur_binary = &grm->getBinaryRule(pc, lc, rc);
             }
