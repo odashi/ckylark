@@ -124,8 +124,8 @@ void LAPCFGParser::generateCoarseModels() {
     for (int level = depth-2; level >= 0; --level) {
         Tracer::println(1, (boost::format("Generating coarse model (level=%d) ...") % level).str());
         
-        int fine = grammar_.size() - 1;
-        ModelProjector projector(*tag_set_, *(lexicon_[fine]), *(grammar_[fine]), depth-1, level);
+        //int fine = grammar_.size() - 1;
+        ModelProjector projector(*tag_set_, *(lexicon_[0]), *(grammar_[0]), level+1, level);
         lexicon_.insert(lexicon_.begin(), projector.generateLexicon());
         grammar_.insert(grammar_.begin(), projector.generateGrammar());
     }
