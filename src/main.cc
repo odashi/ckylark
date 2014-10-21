@@ -1,6 +1,6 @@
 #include "ArgumentParser.h"
 #include "Formatter.h"
-#include "LAPCFGParser.h"
+#include "ParserFactory.h"
 #include "Mapping.h"
 #include "Timer.h"
 #include "Tracer.h"
@@ -21,6 +21,8 @@ using namespace Ckylark;
 
 unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     unique_ptr<ArgumentParser> ap(new ArgumentParser("ckylark -model <model-prefix> [options]"));
+
+    ap->addStringArgument("method", "lapcfg", "parsing strategy", false);
 
     ap->addSwitchArgument("help", "print this manual and exit");
     ap->addIntegerArgument("trace-level", 0, "detail level of trace text", false);
@@ -69,15 +71,7 @@ int main(int argc, char * argv[]) {
         return 1;
     }
 
-    shared_ptr<LAPCFGParser> parser = LAPCFGParser::loadFromBerkeleyDump(ap->getString("model"));
-
-    parser->setFineLevel(ap->getInteger("fine-level"));
-    parser->setPruningThreshold(ap->getReal("prune-threshold"));
-    parser->setUNKLexiconSmoothing(ap->getReal("smooth-unklex"));
-
-    Tracer::println(1, (boost::format("fine-level: %d (requested: %d)") % parser->getFineLevel() % ap->getInteger("fine-level")).str());
-    Tracer::println(1, (boost::format("prune-threshold: %.3e") % parser->getPruningThreshold()).str());
-    Tracer::println(1, (boost::format("smooth-unklex: %.3e") % parser->getUNKLexiconSmoothing()).str());
+    shared_ptr<Parser> parser = ParserFactory::create(*ap);
 
     Timer timer;
 
@@ -105,12 +99,6 @@ int main(int argc, char * argv[]) {
 
         timer.start();
         ParserResult result = parser->parse(ls);
-        if (!result.succeeded && result.final_level > 0) {
-            // get more coarse result
-            parser->setFineLevel(result.final_level - 1);
-            result = parser->parse(ls);
-            parser->setFineLevel(-1);
-        }
         double lap = timer.stop();
 
         string repr = Formatter::ToPennTreeBank(*result.best_parse, ap->getSwitch("add-root-tag"));

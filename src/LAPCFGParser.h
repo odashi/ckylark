@@ -62,6 +62,10 @@ private:
 
     double scaling_factor_;
 
+    ParserResult generateMaxRuleOneBestParse(
+        const std::vector<std::string> & sentence,
+        int final_level_to_try) const;
+
     void loadWordTable(const std::string & path);
     void loadTagSet(const std::string & path);
     void loadLexicon(const std::string & path);
