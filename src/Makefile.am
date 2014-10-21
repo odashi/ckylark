@@ -22,6 +22,7 @@ ckylark_SOURCES = \
     MaxScalingFactor.cc \
     ModelProjector.cc \
     ModelProjector.h \
+    Parser.h \
     ParserResult.h \
     PLFLatticeLoader.cc \
     PLFLatticeLoader.h \

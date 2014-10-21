@@ -1,23 +1,22 @@
 #ifndef CKYLARK_LAPCFG_PARSER_H_
 #define CKYLARK_LAPCFG_PARSER_H_
 
+#include "Parser.h"
+
 #include "CKYTable.h"
 #include "Dictionary.h"
 #include "TagSet.h"
 #include "Lexicon.h"
 #include "Grammar.h"
 #include "Tree.h"
-#include "ParserResult.h"
 
 #include <boost/multi_array.hpp>
 
 #include <memory>
-#include <string>
-#include <vector>
 
 namespace Ckylark {
 
-class LAPCFGParser {
+class LAPCFGParser : public Parser {
 
     struct Extent {
         int narrow_right;
@@ -31,11 +30,11 @@ class LAPCFGParser {
     LAPCFGParser & operator=(const LAPCFGParser &) = delete;
 
 public:
-    ~LAPCFGParser();
+    virtual ~LAPCFGParser();
 
     static std::shared_ptr<LAPCFGParser> loadFromBerkeleyDump(const std::string & path);
 
-    ParserResult parse(const std::vector<std::string> & sentence) const;
+    virtual ParserResult parse(const std::vector<std::string> & sentence) const;
 
     const Dictionary & getWordTable() const { return *word_table_; }
     const TagSet & getTagSet() const { return *tag_set_; }
