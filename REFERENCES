@@ -3,10 +3,15 @@ Slav Petrov, Leon Barrett, Romain Thibaux and Dan Klein.
 Learning Accurate, Compact, and Interpretable Tree Annotation.
 In Proc. COLING-ACL, 2006.
 
-[Petrov & Klein, 2007]
+[Petrov & Klein, 2007a]
 Slav Petrov and Dan Klein.
 Learning and Inference for Hierarchically Split PCFGs.
 In Proc. AAAI, 2007.
+
+[Petrov & Klein, 2007b]
+Slav Petrov and Dan Klein.
+Improved Inference for Unlexicalized Parsing.
+In Proc. NAACL-HLT, 2007.
 
 And we got many knowledgements from leading implements:
     * Berkeley Parser (http://code.google.com/p/berkeleyparser/)
