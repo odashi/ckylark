@@ -22,7 +22,7 @@ private:
 public:
     BerkeleySignatureEstimator(Language lang, const Dictionary & known_words);
 
-    virtual std::string getSignature(const std::vector<std::string> & sentence, size_t location);
+    std::string getSignature(const std::vector<std::string> & sentence, size_t location);
 
 private:
     Language lang_;

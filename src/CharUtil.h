@@ -16,7 +16,7 @@ public:
     inline static bool isControl(char c) { return ((c >= 0x00 && c <= 0x20) || c == 0x7f); }
 
     // true if c is real symbol character, false otherwise
-    inline static bool isLetter(char c) { return !isControl(c); }
+    inline static bool isLetter(char c) { return (isUpper(c) || isLower(c)); }
 
     // true if c is one of whitespace, false otherwise
     inline static bool isSpace(char c) { return ((c >= 0x09 && c <= 0x0d) || c == 0x20); }
