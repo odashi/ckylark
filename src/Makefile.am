@@ -30,6 +30,7 @@ ckylark_SOURCES = \
     PLFLatticeLoader.h \
     Rule.h \
     ScalingFactor.h \
+    StringUtil.h \
     TagSet.cc \
     TagSet.h \
     Timer.cc \
