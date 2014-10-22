@@ -42,6 +42,27 @@ public:
     // true if str contains lowercase alphabet, false otherwise
     inline static bool hasLower(const std::string & str) { return hasCharRange(str, 'a', 'z'); }
 
+    // true if str starts prefix, false otherwise
+    inline static bool startsWith(const std::string & str, const std::string & prefix) {
+        size_t len_prefix = prefix.size();
+        if (str.size() < len_prefix) return false;
+        for (size_t i = 0; i < len_prefix; ++i) {
+            if (str[i] != prefix[i]) return false;
+        }
+        return true;
+    }
+
+    // true if str ends suffix, false otherwise
+    inline static bool endsWith(const std::string & str, const std::string & suffix) {
+        size_t len_str = str.size();
+        size_t len_suffix = suffix.size();
+        if (len_str < len_suffix) return false;
+        for (size_t i = 0; i < len_suffix; ++i) {
+            if (str[len_str - len_suffix + i] != suffix[i]) return false;
+        }
+        return true;
+    }
+
     // count the number of character c in str
     inline static size_t numChar(const std::string & str, char c) {
         size_t n = 0;
