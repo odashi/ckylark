@@ -41,3 +41,4 @@ ckylark_SOURCES = \
     main.cc \
     ;
 
+LDADD = -lboost_iostreams

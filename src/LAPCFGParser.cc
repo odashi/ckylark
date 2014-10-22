@@ -16,6 +16,9 @@
 #include <limits>
 #include <stdexcept>
 
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
+
 #include <iostream> // for debug
 
 using namespace std;
@@ -56,12 +59,25 @@ void LAPCFGParser::loadWordTable(const string & path) {
     
     ifstream ifs(path);
     if (!ifs.is_open()) {
-        throw runtime_error("LAPCFGParser: file not found: " + path);
+        ifstream ifs_gzip(path + ".gz", ios_base::in | ios_base::binary);
+        if(!ifs_gzip.is_open()) {
+            throw runtime_error("LAPCFGParser: file not found: " + path);
+        }
+        Tracer::println(1, "Switch to gzip loader: " + path + ".gz ...");
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> in_gzip_filtered;
+        in_gzip_filtered.push(boost::iostreams::gzip_decompressor());
+        in_gzip_filtered.push(ifs_gzip);
+        istream ifs_unzip(&in_gzip_filtered);
+        loadWordTableFromStream(ifs_unzip);
+    } else {
+        loadWordTableFromStream(ifs);
     }
+}
 
+void LAPCFGParser::loadWordTableFromStream(istream & stream) {
     word_table_.reset(new Dictionary());
     string line;
-    while (getline(ifs, line)) {
+    while (getline(stream, line)) {
         boost::trim(line);
         if (line.size() >= 3 && line.substr(0, 3) == "UNK") {
             // skip UNK* entries
@@ -76,14 +92,28 @@ void LAPCFGParser::loadTagSet(const string & path) {
     
     ifstream ifs(path);
     if (!ifs.is_open()) {
-        throw runtime_error("LAPCFGParser: file not found: " + path);
+        ifstream ifs_gzip(path + ".gz", ios_base::in | ios_base::binary);
+        if(!ifs_gzip.is_open()) {
+            throw runtime_error("LAPCFGParser: file not found: " + path);
+        }
+        Tracer::println(1, "Switch to gzip loader: " + path + ".gz ...");
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> in_gzip_filtered;
+        in_gzip_filtered.push(boost::iostreams::gzip_decompressor());
+        in_gzip_filtered.push(ifs_gzip);
+        istream ifs_unzip(&in_gzip_filtered);
+        try {
+            tag_set_ = TagSet::loadFromStream(ifs_unzip);
+        } catch (...) {
+            throw runtime_error("LAPCFGParser: invalid file format: " + path);
+        }
+    } else {
+        try {
+            tag_set_ = TagSet::loadFromStream(ifs);
+        } catch (...) {
+            throw runtime_error("LAPCFGParser: invalid file format: " + path);
+        }
     }
 
-    try {
-        tag_set_ = TagSet::loadFromStream(ifs);
-    } catch (...) {
-        throw runtime_error("LAPCFGParser: invalid file format: " + path);
-    }
 }
 
 void LAPCFGParser::loadLexicon(const string & path) {
@@ -91,15 +121,30 @@ void LAPCFGParser::loadLexicon(const string & path) {
     
     ifstream ifs(path);
     if (!ifs.is_open()) {
-        throw runtime_error("LAPCFGParser: file not found: " + path);
+        ifstream ifs_gzip(path + ".gz", ios_base::in | ios_base::binary);
+        if(!ifs_gzip.is_open()) {
+            throw runtime_error("LAPCFGParser: file not found: " + path);
+        }
+        Tracer::println(1, "Switch to gzip loader: " + path + ".gz ...");
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> in_gzip_filtered;
+        in_gzip_filtered.push(boost::iostreams::gzip_decompressor());
+        in_gzip_filtered.push(ifs_gzip);
+        istream ifs_unzip(&in_gzip_filtered);
+        try {
+            shared_ptr<Lexicon> lexicon(Lexicon::loadFromStream(ifs_unzip, *word_table_, *tag_set_));
+            lexicon_.push_back(lexicon);
+        } catch (...) {
+            throw runtime_error("LAPCFGParser: invalid file format: " + path);
+        }
+    } else {
+        try {
+            shared_ptr<Lexicon> lexicon(Lexicon::loadFromStream(ifs, *word_table_, *tag_set_));
+            lexicon_.push_back(lexicon);
+        } catch (...) {
+            throw runtime_error("LAPCFGParser: invalid file format: " + path);
+        }
     }
 
-    try {
-        shared_ptr<Lexicon> lexicon(Lexicon::loadFromStream(ifs, *word_table_, *tag_set_));
-        lexicon_.push_back(lexicon);
-    } catch (...) {
-        throw runtime_error("LAPCFGParser: invalid file format: " + path);
-    }
 }
 
 void LAPCFGParser::loadGrammar(const string & path) {
@@ -107,14 +152,28 @@ void LAPCFGParser::loadGrammar(const string & path) {
     
     ifstream ifs(path);
     if (!ifs.is_open()) {
-        throw runtime_error("LAPCFGParser: file not found: " + path);
-    }
-
-    try {
-        shared_ptr<Grammar> grammar(Grammar::loadFromStream(ifs, *tag_set_));
-        grammar_.push_back(grammar);
-    } catch (...) {
-        throw runtime_error("LAPCFGParser: invalid file format: " + path);
+        ifstream ifs_gzip(path + ".gz", ios_base::in | ios_base::binary);
+        if(!ifs_gzip.is_open()) {
+            throw runtime_error("LAPCFGParser: file not found: " + path);
+        }
+        Tracer::println(1, "Switch to gzip loader: " + path + ".gz ...");
+        boost::iostreams::filtering_streambuf<boost::iostreams::input> in_gzip_filtered;
+        in_gzip_filtered.push(boost::iostreams::gzip_decompressor());
+        in_gzip_filtered.push(ifs_gzip);
+        istream ifs_unzip(&in_gzip_filtered);
+        try {
+            shared_ptr<Grammar> grammar(Grammar::loadFromStream(ifs_unzip, *tag_set_));
+            grammar_.push_back(grammar);
+        } catch (...) {
+            throw runtime_error("LAPCFGParser: invalid file format: " + path);
+        }
+    } else {
+        try {
+            shared_ptr<Grammar> grammar(Grammar::loadFromStream(ifs, *tag_set_));
+            grammar_.push_back(grammar);
+        } catch (...) {
+            throw runtime_error("LAPCFGParser: invalid file format: " + path);
+        }
     }
 }
 
