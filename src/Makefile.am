@@ -3,6 +3,8 @@ bin_PROGRAMS = ckylark
 ckylark_SOURCES = \
     ArgumentParser.cc \
     ArgumentParser.h \
+    BerkeleySignatureEstimator.cc \
+    BerkeleySignatureEstimator.h \
     CharUtil.h \
     Dictionary.cc \
     Dictionary.h \
@@ -31,6 +33,7 @@ ckylark_SOURCES = \
     PLFLatticeLoader.h \
     Rule.h \
     ScalingFactor.h \
+    SignatureEstimator.h \
     StringUtil.h \
     TagSet.cc \
     TagSet.h \
