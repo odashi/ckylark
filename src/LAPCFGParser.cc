@@ -56,7 +56,7 @@ shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(const string & path)
 
 void LAPCFGParser::loadWordTable(const string & path) {
     Tracer::println(1, "Loading words: " + path + " ...");
-    
+
     ifstream ifs(path);
     if (!ifs.is_open()) {
         ifstream ifs_gzip(path + ".gz", ios_base::in | ios_base::binary);
@@ -104,7 +104,7 @@ void LAPCFGParser::loadTagSet(const string & path) {
         try {
             tag_set_ = TagSet::loadFromStream(ifs_unzip);
         } catch (...) {
-            throw runtime_error("LAPCFGParser: invalid file format: " + path);
+            throw runtime_error("LAPCFGParser: invalid file format: " + path + ".gz");
         }
     } else {
         try {
@@ -134,7 +134,7 @@ void LAPCFGParser::loadLexicon(const string & path) {
             shared_ptr<Lexicon> lexicon(Lexicon::loadFromStream(ifs_unzip, *word_table_, *tag_set_));
             lexicon_.push_back(lexicon);
         } catch (...) {
-            throw runtime_error("LAPCFGParser: invalid file format: " + path);
+            throw runtime_error("LAPCFGParser: invalid file format: " + path + ".gz");
         }
     } else {
         try {
@@ -165,7 +165,7 @@ void LAPCFGParser::loadGrammar(const string & path) {
             shared_ptr<Grammar> grammar(Grammar::loadFromStream(ifs_unzip, *tag_set_));
             grammar_.push_back(grammar);
         } catch (...) {
-            throw runtime_error("LAPCFGParser: invalid file format: " + path);
+            throw runtime_error("LAPCFGParser: invalid file format: " + path + ".gz");
         }
     } else {
         try {
