@@ -3,6 +3,7 @@ bin_PROGRAMS = ckylark
 ckylark_SOURCES = \
     ArgumentParser.cc \
     ArgumentParser.h \
+    CharUtil.h \
     Dictionary.cc \
     Dictionary.h \
     Formatter.cc \

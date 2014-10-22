@@ -16,7 +16,7 @@ public:
     inline static char toUpper(char c) { return (c >= 'a' && c <= 'z') ? c + 'A' - 'a' : c; }
     
     // make lowercase character
-    inline static char toLower(char c) { return (c >= 'A' && c <= 'Z') ? c + 'a' - 'Z' : c; }
+    inline static char toLower(char c) { return (c >= 'A' && c <= 'Z') ? c + 'a' - 'A' : c; }
 
 }; // class CharUtil
 
