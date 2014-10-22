@@ -43,8 +43,8 @@ public:
     inline static bool hasLower(const std::string & str) { return hasCharRange(str, 'a', 'z'); }
 
     // count the number of character c in str
-    inline static int numChar(const std::string & str, char c) {
-        int n = 0;
+    inline static size_t numChar(const std::string & str, char c) {
+        size_t n = 0;
         for (char x : str) {
             if (x == c) ++n;
         }
@@ -52,8 +52,8 @@ public:
     }
 
     // count the number of characters in str which is in the range [low, high]
-    inline static int numCharRange(const std::string & str, char low, char high) {
-        int n = 0;
+    inline static size_t numCharRange(const std::string & str, char low, char high) {
+        size_t n = 0;
         for (char x : str) {
             if (x >= low && x <= high) ++n;
         }
@@ -61,13 +61,13 @@ public:
     }
 
     // count the number of digits in str
-    inline static int numDigit(const std::string & str) { return numCharRange(str, '0', '9'); }
+    inline static size_t numDigit(const std::string & str) { return numCharRange(str, '0', '9'); }
 
     // count the number of uppercase alphabet in str
-    inline static int numUpper(const std::string & str) { return numCharRange(str, 'A', 'Z'); }
+    inline static size_t numUpper(const std::string & str) { return numCharRange(str, 'A', 'Z'); }
 
     // count the number of lowercase alphabet in str
-    inline static int numLower(const std::string & str) { return numCharRange(str, 'a', 'z'); }
+    inline static size_t numLower(const std::string & str) { return numCharRange(str, 'a', 'z'); }
 
     // make uppercase string
     inline static std::string toUpper(const std::string & str) {
