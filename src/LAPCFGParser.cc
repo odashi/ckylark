@@ -6,6 +6,8 @@
 #include "MaxScalingFactor.h"
 
 #include <boost/algorithm/string.hpp>
+#include <boost/iostreams/filtering_streambuf.hpp>
+#include <boost/iostreams/filter/gzip.hpp>
 #include <boost/format.hpp>
 
 #include <algorithm>
@@ -15,9 +17,6 @@
 #include <fstream>
 #include <limits>
 #include <stdexcept>
-
-#include <boost/iostreams/filtering_streambuf.hpp>
-#include <boost/iostreams/filter/gzip.hpp>
 
 #include <iostream> // for debug
 
