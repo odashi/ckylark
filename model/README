@@ -14,7 +14,6 @@ model/wsj.*:
 These models are created using Berkeley Parser's GrammarTrainer.
 
 If you want to use this model on Ckylark, type below:
-    gzip -d /path/to/model/*
     /path/to/ckylark --model /path/to/model/wsj (or jdc)
 
 

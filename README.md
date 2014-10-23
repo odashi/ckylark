@@ -27,7 +27,11 @@ below approaches:
 Install
 -------
 
-You need `autotools` to build Ckylark.
+You need following tools to build Ckylark.
+* `GCC 4.7` or later
+* `Boost 1.49` or later
+* `autotools`
+
 You simply run below:
 
     cd /path/to/Ckylark
@@ -38,9 +42,6 @@ You simply run below:
 
 Usage
 -----
-
-When you use the bundled model (`wsj` or `jdc`), decompress all
-files in `model` directory beforehand.
 
 For simply use, you can type below command to parse your
 sentences:
@@ -59,6 +60,7 @@ For example,
 
 `Ckylark` uses the text dump files of original `Berkeley Parser`
 models.
+
 You can also use your original models made by `GrammarTrainer`
 and `WriteGrammarToTextFiles` of `Berkeley Parser`.
 
