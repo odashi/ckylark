@@ -356,10 +356,11 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
                 }
             } else {
                 // process lexicon
+                int wid = wid_list[begin];
+                double word_scaling = fine_lexicon.getScalingFactor(wid);
 
                 for (int tag = 0; tag < num_tags; ++tag) {
                     if (!allowed_tag.at(begin, end, tag)) continue;
-                    int wid = wid_list[begin];
                     if (!smoother.prepare(tag, wid)) continue;
                     int num_sub = tag_set_->numSubtags(tag, final_level_to_try);
                     double rule_score = 0.0;
@@ -367,7 +368,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
                     for (int sub = 0; sub < num_sub; ++sub) {
                         if (!allowed_sub.at(begin, end, tag)[sub]) continue;
                         double po = outside.at(begin, end, tag)[sub];
-                        double beta = smoother.getScore(sub);
+                        double beta = word_scaling * smoother.getScore(sub);
                         rule_score += po * beta;
                     }
 
@@ -647,6 +648,7 @@ void LAPCFGParser::setInsideScoresByLexicon(
     for (int begin = 0; begin < num_words; ++begin) {
         int end = begin + 1;
         int wid = wid_list[begin];
+        double word_scaling = cur_lexicon.getScalingFactor(wid);
         
         for (int tag = 0; tag < num_tags; ++tag) {
             if (!allowed_tag.at(begin, end, tag)) continue;
@@ -655,7 +657,7 @@ void LAPCFGParser::setInsideScoresByLexicon(
             
             for (int sub = 0; sub < num_sub; ++sub) {
                 if (!allowed_sub.at(begin, end, tag)[sub]) continue;
-                inside.at(begin, end, tag)[sub] = smoother.getScore(sub);
+                inside.at(begin, end, tag)[sub] = word_scaling * smoother.getScore(sub);
                 
                 //cerr << begin << "(" << sentence[begin] << ")->"
                 //    << tag_set_->getTagName(tag) << "[" << sub << "] = "
@@ -748,11 +750,12 @@ void LAPCFGParser::calculateInsideScores(
                         }
 
                         inside.at(begin, end, ptag)[psub] = sum;
-                        /*
-                        cout << (boost::format("%3d-%3d : %8s %3d = %.6e")
+                        
+                        cout << (boost::format("%d : %3d-%3d : %8s %3d = %.6e")
+                            % cur_level
                             % begin % end % tag_set_->getTagName(ptag) % psub
                             % inside.at(begin, end, ptag)[psub]) << endl;
-                        */
+                        
                     } // psub
 
                     if (!changed) continue;

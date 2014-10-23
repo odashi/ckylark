@@ -34,6 +34,8 @@ public:
     inline void setScore(int subtag, double value) { score_[subtag] = value; }
     inline void addScore(int subtag, double delta) { score_[subtag] += delta; }
 
+    double getMaxScore() const;
+
 private:
     int tag_id_;
     int word_id_;
@@ -61,6 +63,8 @@ public:
 
     const std::vector<std::map<int, LexiconEntry *> > getEntryList() const { return entry_; }
 
+    double getScalingFactor(int word_id) const;
+
     inline int getLevel() const { return level_; }
 
     inline bool hasEntry(int tag_id) const { return !entry_[tag_id].empty(); };
@@ -69,6 +73,7 @@ private:
     const TagSet & tag_set_;
     int level_;
     std::vector<std::map<int, LexiconEntry *> > entry_; // [category]{word}
+    mutable std::map<int, double> scaling_;
 
 }; // class Lexicon
 
