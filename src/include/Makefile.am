@@ -25,5 +25,4 @@ nobase_include_HEADERS = \
     ckylark/TagSet.h \
     ckylark/Timer.h \
     ckylark/Tracer.h \
-    ckylark/Tree.h \
-    ;
+    ckylark/Tree.h

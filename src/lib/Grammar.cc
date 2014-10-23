@@ -1,4 +1,4 @@
-#include "Grammar.h"
+#include <ckylark/Grammar.h>
 
 #include <boost/algorithm/string.hpp>
 

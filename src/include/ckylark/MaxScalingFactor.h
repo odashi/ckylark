@@ -1,7 +1,7 @@
 #ifndef CKYLARK_MAX_SCALING_FACTOR_H_
 #define CKYLARK_MAX_SCALING_FACTOR_H_
 
-#include "ScalingFactor.h"
+#include <ckylark/ScalingFactor.h>
 
 namespace Ckylark {
 

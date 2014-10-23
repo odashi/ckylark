@@ -1,9 +1,9 @@
 #ifndef CKYLARK_BERKELEY_SIGNATURE_ESTIMATOR_H_
 #define CKYLARK_BERKELEY_SIGNATURE_ESTIMATOR_H_
 
-#include "SignatureEstimator.h"
+#include <ckylark/SignatureEstimator.h>
 
-#include "Dictionary.h"
+#include <ckylark/Dictionary.h>
 
 namespace Ckylark {
 

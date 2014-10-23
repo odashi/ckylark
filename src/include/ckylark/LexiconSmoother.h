@@ -1,7 +1,7 @@
 #ifndef CKYLARK_LEXICON_SMOOTHER_H_
 #define CKYLARK_LEXICON_SMOOTHER_H_
 
-#include "Lexicon.h"
+#include <ckylark/Lexicon.h>
 
 namespace Ckylark {
 

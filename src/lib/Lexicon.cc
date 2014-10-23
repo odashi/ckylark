@@ -1,4 +1,4 @@
-#include "Lexicon.h"
+#include <ckylark/Lexicon.h>
 
 #include <boost/algorithm/string.hpp>
 #include <algorithm>

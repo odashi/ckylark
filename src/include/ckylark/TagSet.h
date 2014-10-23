@@ -1,8 +1,8 @@
 #ifndef CKYLARK_TAG_SET_H_
 #define CKYLARK_TAG_SET_H_
 
-#include "Dictionary.h"
-#include "Tree.h"
+#include <ckylark/Dictionary.h>
+#include <ckylark/Tree.h>
 
 #include <iostream>
 #include <memory>

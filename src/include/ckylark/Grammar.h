@@ -1,9 +1,9 @@
 #ifndef CKYLARK_GRAMMAR_H_
 #define CKYLARK_GRAMMAR_H_
 
-#include "TagSet.h"
-#include "Dictionary.h"
-#include "Rule.h"
+#include <ckylark/TagSet.h>
+#include <ckylark/Dictionary.h>
+#include <ckylark/Rule.h>
 
 #include <iostream>
 #include <memory>

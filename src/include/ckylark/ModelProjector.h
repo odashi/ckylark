@@ -1,10 +1,10 @@
 #ifndef CKYLARK_MODEL_PROJECTOR_H_
 #define CKYLARK_MODEL_PROJECTOR_H_
 
-#include "TagSet.h"
-#include "Grammar.h"
-#include "Lexicon.h"
-#include "Mapping.h"
+#include <ckylark/TagSet.h>
+#include <ckylark/Grammar.h>
+#include <ckylark/Lexicon.h>
+#include <ckylark/Mapping.h>
 
 #include <memory>
 #include <vector>

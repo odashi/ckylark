@@ -1,4 +1,4 @@
-#include "MaxScalingFactor.h"
+#include <ckylark/MaxScalingFactor.h>
 
 #include <cmath>
 

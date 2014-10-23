@@ -1,7 +1,7 @@
 #ifndef CKYLARK_PARSER_H_
 #define CKYLARK_PARSER_H_
 
-#include "ParserResult.h"
+#include <ckylark/ParserResult.h>
 
 #include <vector>
 #include <string>

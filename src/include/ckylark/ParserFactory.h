@@ -1,8 +1,8 @@
 #ifndef CKYLARK_PARSER_FACTORY_H_
 #define CKYLARK_PARSER_FACTORY_H_
 
-#include "Parser.h"
-#include "ArgumentParser.h"
+#include <ckylark/Parser.h>
+#include <ckylark/ArgumentParser.h>
 
 #include <memory>
 

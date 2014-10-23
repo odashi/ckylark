@@ -1,4 +1,4 @@
-#include "Lattice.h"
+#include <ckylark/Lattice.h>
 
 #include <stdexcept>
 

@@ -1,7 +1,7 @@
 #ifndef CKYLARK_MAPPING_H_
 #define CKYLARK_MAPPING_H_
 
-#include "TagSet.h"
+#include <ckylark/TagSet.h>
 
 #include <vector>
 

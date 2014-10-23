@@ -1,10 +1,10 @@
-#include "LAPCFGParser.h"
+#include <ckylark/LAPCFGParser.h>
 
-#include "Mapping.h"
-#include "ModelProjector.h"
-#include "Tracer.h"
-#include "MaxScalingFactor.h"
-#include "OOVLexiconSmoother.h"
+#include <ckylark/Mapping.h>
+#include <ckylark/ModelProjector.h>
+#include <ckylark/Tracer.h>
+#include <ckylark/MaxScalingFactor.h>
+#include <ckylark/OOVLexiconSmoother.h>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>

@@ -1,7 +1,7 @@
 #ifndef CKYLARK_FORMATTER_H_
 #define CKYLARK_FORMATTER_H_
 
-#include "Tree.h"
+#include <ckylark/Tree.h>
 
 #include <string>
 

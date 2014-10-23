@@ -1,8 +1,8 @@
 #ifndef CKYLARK_SCALING_FACTOR_H_
 #define CKYLARK_SCALING_FACTOR_H_
 
-#include "Lexicon.h"
-#include "Grammar.h"
+#include <ckylark/Lexicon.h>
+#include <ckylark/Grammar.h>
 
 namespace Ckylark {
 

@@ -1,8 +1,8 @@
 #ifndef CKYLARK_LEXICON_H_
 #define CKYLARK_LEXICON_H_
 
-#include "TagSet.h"
-#include "Dictionary.h"
+#include <ckylark/TagSet.h>
+#include <ckylark/Dictionary.h>
 
 #include <iostream>
 #include <map>

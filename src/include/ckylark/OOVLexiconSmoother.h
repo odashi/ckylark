@@ -1,7 +1,7 @@
 #ifndef CKYLARK_OOV_LEXICON_SMOOTHER_H_
 #define CKYLARK_OOV_LEXICON_SMOOTHER_H_
 
-#include "LexiconSmoother.h"
+#include <ckylark/LexiconSmoother.h>
 
 namespace Ckylark {
 

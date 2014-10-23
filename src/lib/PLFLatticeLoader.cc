@@ -1,4 +1,4 @@
-#include "PLFLatticeLoader.h"
+#include <ckylark/PLFLatticeLoader.h>
 
 #include <boost/algorithm/string.hpp>
 

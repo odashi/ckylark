@@ -1,14 +1,14 @@
 #ifndef CKYLARK_LAPCFG_PARSER_H_
 #define CKYLARK_LAPCFG_PARSER_H_
 
-#include "Parser.h"
+#include <ckylark/Parser.h>
 
-#include "CKYTable.h"
-#include "Dictionary.h"
-#include "TagSet.h"
-#include "Lexicon.h"
-#include "Grammar.h"
-#include "Tree.h"
+#include <ckylark/CKYTable.h>
+#include <ckylark/Dictionary.h>
+#include <ckylark/TagSet.h>
+#include <ckylark/Lexicon.h>
+#include <ckylark/Grammar.h>
+#include <ckylark/Tree.h>
 
 #include <boost/multi_array.hpp>
 

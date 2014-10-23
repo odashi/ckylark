@@ -1,7 +1,7 @@
 #ifndef CKYLARK_STRING_UTIL_H_
 #define CKYLARK_STRING_UTIL_H_
 
-#include "CharUtil.h"
+#include <ckylark/CharUtil.h>
 
 #include <algorithm>
 #include <string>

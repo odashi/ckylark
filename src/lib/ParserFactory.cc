@@ -1,7 +1,7 @@
-#include "ParserFactory.h"
+#include <ckylark/ParserFactory.h>
 
-#include "LAPCFGParser.h"
-#include "Tracer.h"
+#include <ckylark/LAPCFGParser.h>
+#include <ckylark/Tracer.h>
 
 #include <boost/format.hpp>
 

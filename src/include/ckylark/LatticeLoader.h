@@ -1,7 +1,7 @@
 #ifndef CKYLARK_LATTICE_LOADER_H_
 #define CKYLARK_LATTICE_LOADER_H_
 
-#include "Lattice.h"
+#include <ckylark/Lattice.h>
 
 #include <istream>
 #include <memory>

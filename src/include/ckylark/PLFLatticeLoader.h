@@ -1,7 +1,7 @@
 #ifndef CKYLARK_PLF_LATTICE_LOADER_H_
 #define CKYLARK_PLF_LATTICE_LOADER_H_
 
-#include "LatticeLoader.h"
+#include <ckylark/LatticeLoader.h>
 
 namespace Ckylark {
 

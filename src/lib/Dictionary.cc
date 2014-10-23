@@ -1,4 +1,4 @@
-#include "Dictionary.h"
+#include <ckylark/Dictionary.h>
 
 #include <algorithm>
 #include <sstream>

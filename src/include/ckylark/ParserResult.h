@@ -1,7 +1,7 @@
 #ifndef CKYLARK_PARSER_RESULT_H_
 #define CKYLARK_PARSER_RESULT_H_
 
-#include "Tree.h"
+#include <ckylark/Tree.h>
 
 #include <memory>
 #include <string>

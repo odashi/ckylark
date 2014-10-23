@@ -1,4 +1,4 @@
-#include "OOVLexiconSmoother.h"
+#include <ckylark/OOVLexiconSmoother.h>
 
 #include <stdexcept>
 
