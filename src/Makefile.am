@@ -19,12 +19,15 @@ ckylark_SOURCES = \
     LatticeLoader.h \
     Lexicon.cc \
     Lexicon.h \
+    LexiconSmoother.h \
     Mapping.cc \
     Mapping.h \
-    MaxScalingFactor.h \
     MaxScalingFactor.cc \
+    MaxScalingFactor.h \
     ModelProjector.cc \
     ModelProjector.h \
+    OOVLexiconSmoother.cc \
+    OOVLexiconSmoother.h \
     Parser.h \
     ParserFactory.cc \
     ParserFactory.h \

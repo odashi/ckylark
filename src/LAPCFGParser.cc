@@ -4,6 +4,7 @@
 #include "ModelProjector.h"
 #include "Tracer.h"
 #include "MaxScalingFactor.h"
+#include "OOVLexiconSmoother.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/iostreams/filtering_streambuf.hpp>
@@ -260,6 +261,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
     const double NEG_INFTY = -1e20;
     const Lexicon & fine_lexicon = getLexicon(final_level_to_try);
     const Grammar & fine_grammar = getGrammar(final_level_to_try);
+    OOVLexiconSmoother smoother(fine_lexicon, smooth_unklex_);
 
     for (int len = 1; len <= num_words; ++len) {
         for (int begin = 0; begin < num_words - len + 1; ++begin) {
@@ -358,18 +360,14 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
                 for (int tag = 0; tag < num_tags; ++tag) {
                     if (!allowed_tag.at(begin, end, tag)) continue;
                     int wid = wid_list[begin];
-                    const LexiconEntry * ent_word = fine_lexicon.getEntry(tag, wid);
-                    const LexiconEntry * ent_unk = fine_lexicon.getEntry(tag, -1);
-                    if (!ent_word && !ent_unk) continue;
+                    if (!smoother.prepare(tag, wid)) continue;
                     int num_sub = tag_set_->numSubtags(tag, final_level_to_try);
                     double rule_score = 0.0;
 
                     for (int sub = 0; sub < num_sub; ++sub) {
                         if (!allowed_sub.at(begin, end, tag)[sub]) continue;
                         double po = outside.at(begin, end, tag)[sub];
-                        double beta =
-                            (1.0 - smooth_unklex_) * (ent_word ? ent_word->getScore(sub) : 0.0) +
-                            smooth_unklex_ * (ent_unk ? ent_unk->getScore(sub) : 0.0);
+                        double beta = smoother.getScore(sub);
                         rule_score += po * beta;
                     }
 
@@ -644,6 +642,7 @@ void LAPCFGParser::setInsideScoresByLexicon(
     const int num_words = allowed_tag.numWords();
     const int num_tags = allowed_tag.numTags();
     const Lexicon & cur_lexicon = getLexicon(cur_level);
+    OOVLexiconSmoother smoother(cur_lexicon, smooth_unklex_);
 
     for (int begin = 0; begin < num_words; ++begin) {
         int end = begin + 1;
@@ -651,16 +650,13 @@ void LAPCFGParser::setInsideScoresByLexicon(
         
         for (int tag = 0; tag < num_tags; ++tag) {
             if (!allowed_tag.at(begin, end, tag)) continue;
-            const LexiconEntry * ent_word = cur_lexicon.getEntry(tag, wid);
-            const LexiconEntry * ent_unk = cur_lexicon.getEntry(tag, -1);
-            if (!ent_word && !ent_unk) continue;
+            if (!smoother.prepare(tag, wid)) continue;
             int num_sub = tag_set_->numSubtags(tag, cur_level);
             
             for (int sub = 0; sub < num_sub; ++sub) {
                 if (!allowed_sub.at(begin, end, tag)[sub]) continue;
-                inside.at(begin, end, tag)[sub] =
-                    (1.0 - smooth_unklex_) * (ent_word ? ent_word->getScore(sub) : 0.0) +
-                    smooth_unklex_ * (ent_unk ? ent_unk->getScore(sub) : 0.0);
+                inside.at(begin, end, tag)[sub] = smoother.getScore(sub);
+                
                 //cerr << begin << "(" << sentence[begin] << ")->"
                 //    << tag_set_->getTagName(tag) << "[" << sub << "] = "
                 //    << inside.at(begin, end, tag)[sub] << endl;
