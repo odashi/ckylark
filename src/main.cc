@@ -5,6 +5,7 @@
 #include "Timer.h"
 #include "Tracer.h"
 #include "ParserResult.h"
+#include "StreamFactory.h"
 
 #include <boost/algorithm/string.hpp>
 #include <boost/format.hpp>
@@ -57,20 +58,11 @@ int main(int argc, char * argv[]) {
 
     Tracer::setTraceLevel(ap->getInteger("trace-level"));
     
-    string ifname = ap->getString("input");
-    ifstream ifs(ifname);
-    if (!ifs.is_open()) {
-        Tracer::println(0, "ERROR: cannot open input file: " + ifname);
-        return 1;
-    }
+    // open input/output streams
+    shared_ptr<InputStream> ifs = StreamFactory::getInputStream(ap->getString("input"));
+    shared_ptr<OutputStream> ofs = StreamFactory::getOutputStream(ap->getString("output"));
 
-    string ofname = ap->getString("output");
-    ofstream ofs(ofname);
-    if (!ofs.is_open()) {
-        Tracer::println(0, "ERROR: cannot open output file: " + ofname);
-        return 1;
-    }
-
+    // select parser
     shared_ptr<Parser> parser = ParserFactory::create(*ap);
 
     Timer timer;
@@ -81,7 +73,7 @@ int main(int argc, char * argv[]) {
     int total_lines = 0;
     int total_words = 0;
     
-    while (getline(ifs, line)) {
+    while (ifs->readLine(line)) {
         boost::trim(line);
         vector<string> ls;
         if (!line.empty()) {
@@ -105,7 +97,8 @@ int main(int argc, char * argv[]) {
         
         Tracer::println(1, "  Parse: " + repr);
         Tracer::println(1, (boost::format("  Time: %.3fs") % lap).str());
-        ofs << repr << endl;
+        
+        ofs->writeLine(repr);
     }
 
     Tracer::println(1);

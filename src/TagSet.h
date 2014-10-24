@@ -3,6 +3,7 @@
 
 #include "Dictionary.h"
 #include "Tree.h"
+#include "Stream.h"
 
 #include <iostream>
 #include <memory>
@@ -20,7 +21,7 @@ class TagSet {
 public:
     ~TagSet();
 
-    static std::shared_ptr<TagSet> loadFromStream(std::istream & stream);
+    static std::shared_ptr<TagSet> loadFromStream(InputStream & stream);
 
     int getTagId(std::string name) const { return tag_table_.getId(name); }
     std::string getTagName(int id) const { return tag_table_.getWord(id); }

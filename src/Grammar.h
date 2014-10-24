@@ -4,6 +4,7 @@
 #include "TagSet.h"
 #include "Dictionary.h"
 #include "Rule.h"
+#include "Stream.h"
 
 #include <iostream>
 #include <memory>
@@ -21,7 +22,7 @@ public:
     Grammar(const TagSet & tag_set, int level);
     ~Grammar();
 
-    static std::shared_ptr<Grammar> loadFromStream(std::istream & stream, const TagSet & tag_set);
+    static std::shared_ptr<Grammar> loadFromStream(InputStream & stream, const TagSet & tag_set);
 
     inline int getLevel() const { return level_; }
 

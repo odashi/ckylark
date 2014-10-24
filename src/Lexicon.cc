@@ -33,7 +33,7 @@ Lexicon::~Lexicon() {
 }
 
 shared_ptr<Lexicon> Lexicon::loadFromStream(
-    istream & stream,
+    InputStream & stream,
     const Dictionary & word_table,
     const TagSet & tag_set) {
 
@@ -41,7 +41,7 @@ shared_ptr<Lexicon> Lexicon::loadFromStream(
     shared_ptr<Lexicon> plex(lex);
 
     string line;
-    while (getline(stream, line)) {
+    while (stream.readLine(line)) {
         boost::trim(line);
         int pos1 = line.find(" ");
         int pos2 = line.find(" ", pos1+1);

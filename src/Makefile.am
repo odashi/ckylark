@@ -12,6 +12,8 @@ ckylark_SOURCES = \
     Formatter.h \
     Grammar.cc \
     Grammar.h \
+    GZipStream.cc \
+    GZipStream.h \
     LAPCFGParser.cc \
     LAPCFGParser.h \
     Lattice.cc \
@@ -37,9 +39,14 @@ ckylark_SOURCES = \
     Rule.h \
     ScalingFactor.h \
     SignatureEstimator.h \
+    Stream.h \
+    StreamFactory.cc \
+    StreamFactory.h \
     StringUtil.h \
     TagSet.cc \
     TagSet.h \
+    TextStream.cc \
+    TextStream.h \
     Timer.cc \
     Timer.h \
     Tracer.cc \
@@ -49,3 +56,4 @@ ckylark_SOURCES = \
     ;
 
 LDADD = -lboost_iostreams
+
