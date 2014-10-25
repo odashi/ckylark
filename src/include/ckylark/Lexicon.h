@@ -3,6 +3,7 @@
 
 #include <ckylark/TagSet.h>
 #include <ckylark/Dictionary.h>
+#include <ckylark/Stream.h>
 
 #include <iostream>
 #include <map>
@@ -54,7 +55,7 @@ public:
     ~Lexicon();
 
     static std::shared_ptr<Lexicon> loadFromStream(
-        std::istream & stream,
+        InputStream & stream,
         const Dictionary & word_table,
         const TagSet & tag_set);
 

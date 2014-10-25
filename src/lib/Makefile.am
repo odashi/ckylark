@@ -8,6 +8,7 @@ libckylark_la_SOURCES = \
     Dictionary.cc \
     Formatter.cc \
     Grammar.cc \
+    GZipStream.cc \
     LAPCFGParser.cc \
     Lattice.cc \
     Lexicon.cc \
@@ -17,7 +18,9 @@ libckylark_la_SOURCES = \
     OOVLexiconSmoother.cc \
     ParserFactory.cc \
     PLFLatticeLoader.cc \
+    StreamFactory.cc \
     TagSet.cc \
+    TextStream.cc \
     Timer.cc \
     Tracer.cc
 

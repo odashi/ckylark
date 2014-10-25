@@ -6,6 +6,7 @@ nobase_include_HEADERS = \
     ckylark/Dictionary.h \
     ckylark/Formatter.h \
     ckylark/Grammar.h \
+    ckylark/GZipStream.h \
     ckylark/LAPCFGParser.h \
     ckylark/Lattice.h \
     ckylark/LatticeLoader.h \
@@ -22,8 +23,11 @@ nobase_include_HEADERS = \
     ckylark/Rule.h \
     ckylark/ScalingFactor.h \
     ckylark/SignatureEstimator.h \
+    ckylark/Stream.h \
+    ckylark/StreamFactory.h \
     ckylark/StringUtil.h \
     ckylark/TagSet.h \
+    ckylark/TextStream.h \
     ckylark/Timer.h \
     ckylark/Tracer.h \
     ckylark/Tree.h

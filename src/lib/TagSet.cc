@@ -25,7 +25,7 @@ TagSet::~TagSet() {
     }
 }
 
-shared_ptr<TagSet> TagSet::loadFromStream(istream & stream) {
+shared_ptr<TagSet> TagSet::loadFromStream(InputStream & stream) {
     typedef boost::char_separator<char> separator;
     typedef boost::tokenizer<separator> tokenizer;
 
@@ -33,7 +33,7 @@ shared_ptr<TagSet> TagSet::loadFromStream(istream & stream) {
     shared_ptr<TagSet> ptags(tags);
 
     string line;
-    while (getline(stream, line)) {
+    while (stream.readLine(line)) {
         boost::trim(line);
         vector<string> ls;
         boost::split(ls, line, boost::is_any_of("\t"));

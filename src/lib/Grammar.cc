@@ -36,7 +36,7 @@ Grammar::~Grammar() {
     }
 }
 
-shared_ptr<Grammar> Grammar::loadFromStream(std::istream & stream, const TagSet & tag_set) {
+shared_ptr<Grammar> Grammar::loadFromStream(InputStream & stream, const TagSet & tag_set) {
     Grammar * grm = new Grammar(tag_set, tag_set.getDepth()-1);
     shared_ptr<Grammar> pgrm(grm);
 
@@ -44,7 +44,7 @@ shared_ptr<Grammar> Grammar::loadFromStream(std::istream & stream, const TagSet 
     UnaryRule * cur_unary = &grm->getUnaryRule(0, 0); // dummy
 
     string line;
-    while (getline(stream, line)) {
+    while (stream.readLine(line)) {
         boost::trim(line);
         vector<string> ls;
         boost::split(ls, line, boost::is_any_of("_ "));
