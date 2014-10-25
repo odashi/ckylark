@@ -4,11 +4,12 @@
 AC_PREREQ([2.69])
 AC_INIT([ckylark], [0.3.0], [yus.takara@gmail.com])
 AM_INIT_AUTOMAKE
-AC_CONFIG_SRCDIR([src/main.cc])
+AC_CONFIG_SRCDIR([src/bin/main.cc])
 AC_CONFIG_HEADERS([config.h])
 
 # Checks for programs.
 AC_LANG([C++])
+AC_PROG_LIBTOOL
 AC_PROG_CXX
 AC_PROG_CC
 
@@ -32,5 +33,12 @@ AC_TYPE_SIZE_T
 # Checks for library functions.
 
 AC_CONFIG_FILES([Makefile
-                 src/Makefile])
+                 src/Makefile
+                 src/bin/Makefile
+                 src/include/Makefile
+                 src/lib/Makefile
+])
+
+AC_CONFIG_MACRO_DIR([m4])
+
 AC_OUTPUT
