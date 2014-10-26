@@ -142,8 +142,11 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
 
     for (int level = 0; level <= final_level_to_try; ++level) {
         initializeCharts(allowed_tag, allowed_sub, inside, outside, extent, level);
+        //cout << "  init" << endl;
         setInsideScoresByLexicon(allowed_tag, allowed_sub, inside, wid_list, level);
+        //cout << "  lexicon" << endl;
         calculateInsideScores(allowed_tag, allowed_sub, inside, extent, level);
+        //cout << "  inside" << endl;
 
         // check if all possible parses are pruned
         double sentence_score = inside.at(0, num_words, root_tag)[0];
@@ -151,11 +154,14 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
             Tracer::println(1, (boost::format("  No any possible parses (level=%d).") % level).str());
             return ParserResult { getDefaultParse(), false, level };
         }
+        //cout << "  check" << endl;
 
         calculateOutsideScores(allowed_tag, allowed_sub, inside, outside, extent, level);
+        //cout << "  outside" << endl;
         pruneCharts(allowed_tag, allowed_sub, inside, outside, level);
+        //cout << "  prune" << endl;
 
-        //fprintf(stderr, "pre-parse %d ... ROOT: %e\n", level, inside[0][num_words][root_tag][0]);
+        //fprintf(stderr, "pre-parse %d ... ROOT: %e\n", level, inside.at(0, num_words, root_tag)[0]);
     } // level
 
     // retrieve max-rule parse over allowed nodes
@@ -508,25 +514,35 @@ void LAPCFGParser::initializeCharts(
     for (int begin = 0; begin < num_words; ++begin) {
         for (int end = begin + 1; end <= num_words; ++end) {
             for (int tag = 0; tag < num_tags; ++tag) {
-                int num_subtags_fine = tag_set_->numSubtags(tag, cur_level);
-                inside.at(begin, end, tag).assign(num_subtags_fine, 0.0);
-                outside.at(begin, end, tag).assign(num_subtags_fine, 0.0);
                 if (cur_level > 0) {
-                    // initialize subtag constraints
-                    int num_subtags_coarse = tag_set_->numSubtags(tag, cur_level - 1);
-                    vector<bool> & allowed_sub_fine = allowed_sub.at(begin, end, tag);
-                    vector<bool> allowed_sub_coarse = allowed_sub_fine;
-                    allowed_sub_fine.assign(num_subtags_fine, false);
-                    for (int subtag_coarse = 0; subtag_coarse < num_subtags_coarse; ++subtag_coarse) {
-                        if (!allowed_sub_coarse[subtag_coarse]) continue;
-                        for (int subtag_fine : mapping->getCoarseToFineMaps(tag, subtag_coarse)) {
-                            allowed_sub_fine[subtag_fine] = true;
+                    if (allowed_tag.at(begin, end, tag)) {
+                        // initialize subtag constraints
+                        int num_subtags_fine = tag_set_->numSubtags(tag, cur_level);
+                        inside.at(begin, end, tag).assign(num_subtags_fine, 0.0);
+                        outside.at(begin, end, tag).assign(num_subtags_fine, 0.0);
+                        int num_subtags_coarse = tag_set_->numSubtags(tag, cur_level - 1);
+                        vector<bool> & allowed_sub_fine = allowed_sub.at(begin, end, tag);
+                        vector<bool> allowed_sub_coarse = allowed_sub_fine;
+                        allowed_sub_fine.assign(num_subtags_fine, false);
+                        
+                        // do coarse-to-fine mapping
+                        for (int subtag_coarse = 0; subtag_coarse < num_subtags_coarse; ++subtag_coarse) {
+                            if (!allowed_sub_coarse[subtag_coarse]) continue;
+                            for (int subtag_fine : mapping->getCoarseToFineMaps(tag, subtag_coarse)) {
+                                allowed_sub_fine[subtag_fine] = true;
+                            }
                         }
+                    } else {
+                        // delete unnecessary data to suppress memory
+                        inside.at(begin, end, tag).clear();
+                        outside.at(begin, end, tag).clear();
                     }
                 } else {
                     // only 1 subtag is possible for the first time
+                    inside.at(begin, end, tag).assign(1, 0.0);
+                    outside.at(begin, end, tag).assign(1, 0.0);
                     allowed_tag.at(begin, end, tag) = true;
-                    allowed_sub.at(begin, end, tag).assign(num_subtags_fine, true);
+                    allowed_sub.at(begin, end, tag).assign(1, true);
                 }
             }
         }
@@ -920,6 +936,8 @@ void LAPCFGParser::pruneCharts(
             //int best_sub = -1;
 
             for (int tag = 0; tag < num_tags; ++tag) {
+                if (!allowed_tag.at(begin, end, tag)) continue;
+
                 int num_sub = tag_set_->numSubtags(tag, cur_level);
                 bool joined = false;
 
