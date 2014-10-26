@@ -46,7 +46,7 @@ Usage
 For simply use, you can type below command to parse your
 sentences:
 
-    src/ckylark --model (model prefix) < (your word-segmented corpus)
+    src/bin/ckylark --model (model prefix) < (your word-segmented corpus)
 
 `--model` requires the prefix of model file like `model/wsj` in
 this repository.
@@ -55,7 +55,7 @@ sentences, use `model/jdc` instead)
 
 For example,
 
-    $ echo "This is a pen ." | src/ckylark --model model/wsj
+    $ echo "This is a pen ." | src/bin/ckylark --model model/wsj
     ( (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN pen))) (. .)) )
 
 `Ckylark` uses the text dump files of original `Berkeley Parser`
@@ -66,7 +66,7 @@ and `WriteGrammarToTextFiles` of `Berkeley Parser`.
 
 If you want to see all options, please type below:
 
-    src/ckylark --help
+    src/bin/ckylark --help
 
 
 Contributors
