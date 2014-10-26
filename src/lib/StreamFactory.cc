@@ -1,5 +1,6 @@
 #include <ckylark/StreamFactory.h>
 
+#include <ckylark/StdStream.h>
 #include <ckylark/TextStream.h>
 #include <ckylark/GZipStream.h>
 
@@ -11,7 +12,13 @@ using namespace std;
 
 namespace Ckylark {
 
-shared_ptr<InputStream> StreamFactory::getInputStream(const string & path) {
+shared_ptr<InputStream> StreamFactory::createInputStream(const string & path) {
+    // try loading stdin
+    if (path == "/dev/stdin") {
+        Tracer::println(1, "input: STDIN");
+        return shared_ptr<InputStream>(new StdInputStream());
+    }
+
     // try loading basic text stream
     try {
         InputStream * stream = new TextInputStream(path);
@@ -30,10 +37,16 @@ shared_ptr<InputStream> StreamFactory::getInputStream(const string & path) {
     }
 
     // all cases are failed
-    throw runtime_error("StreamFactory::getInputStream: cannot open file: " + path);
+    throw runtime_error("StreamFactory::createInputStream: cannot open file: " + path);
 }
 
-shared_ptr<OutputStream> StreamFactory::getOutputStream(const string & path) {
+shared_ptr<OutputStream> StreamFactory::createOutputStream(const string & path) {
+    // try loading stdout
+    if (path == "/dev/stdout") {
+        Tracer::println(1, "output: STDOUT");
+        return shared_ptr<OutputStream>(new StdOutputStream);
+    }
+    
     // try loading basic text stream
     try {
         OutputStream * stream = new TextOutputStream(path);
@@ -43,7 +56,7 @@ shared_ptr<OutputStream> StreamFactory::getOutputStream(const string & path) {
     }
 
     // all cases are failed
-    throw runtime_error("StreamFactory::getOutputStream: cannot open file: " + path);
+    throw runtime_error("StreamFactory::createOutputStream: cannot open file: " + path);
 }
 
 } // namespace Ckylark

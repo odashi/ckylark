@@ -17,10 +17,10 @@ class StreamFactory {
 
 public:
     // create input stream from specific path
-    static std::shared_ptr<InputStream> getInputStream(const std::string & path);
+    static std::shared_ptr<InputStream> createInputStream(const std::string & path);
 
     // create output stream from specific path
-    static std::shared_ptr<OutputStream> getOutputStream(const std::string & path);
+    static std::shared_ptr<OutputStream> createOutputStream(const std::string & path);
 
 }; // class StreamFactory
 

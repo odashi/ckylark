@@ -23,6 +23,7 @@ nobase_include_HEADERS = \
     ckylark/Rule.h \
     ckylark/ScalingFactor.h \
     ckylark/SignatureEstimator.h \
+    ckylark/StdStream.h \
     ckylark/Stream.h \
     ckylark/StreamFactory.h \
     ckylark/StringUtil.h \

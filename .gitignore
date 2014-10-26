@@ -8,7 +8,6 @@
 .libs
 autom4te.cache
 autoscan.log
-ckylark
 config.*
 configure
 depcomp
@@ -21,4 +20,4 @@ Makefile.in
 missing
 mydata
 stamp-h1
-
+src/bin/ckylark

@@ -55,7 +55,7 @@ shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(const string & path)
 
 void LAPCFGParser::loadWordTable(const string & path) {
     Tracer::println(1, "Loading words: " + path + " ...");
-    shared_ptr<InputStream> ifs = StreamFactory::getInputStream(path);
+    shared_ptr<InputStream> ifs = StreamFactory::createInputStream(path);
 
     word_table_.reset(new Dictionary());
     string line;
@@ -71,20 +71,20 @@ void LAPCFGParser::loadWordTable(const string & path) {
 
 void LAPCFGParser::loadTagSet(const string & path) {
     Tracer::println(1, "Loading tags: " + path + " ...");
-    shared_ptr<InputStream> ifs = StreamFactory::getInputStream(path);
+    shared_ptr<InputStream> ifs = StreamFactory::createInputStream(path);
     tag_set_ = TagSet::loadFromStream(*ifs);
 }
 
 void LAPCFGParser::loadLexicon(const string & path) {
     Tracer::println(1, "Loading lexicon: " + path + " ...");
-    shared_ptr<InputStream> ifs = StreamFactory::getInputStream(path);
+    shared_ptr<InputStream> ifs = StreamFactory::createInputStream(path);
     shared_ptr<Lexicon> lexicon(Lexicon::loadFromStream(*ifs, *word_table_, *tag_set_));
     lexicon_.push_back(lexicon);
 }
 
 void LAPCFGParser::loadGrammar(const string & path) {
     Tracer::println(1, "Loading grammar: " + path + " ...");
-    shared_ptr<InputStream> ifs = StreamFactory::getInputStream(path);
+    shared_ptr<InputStream> ifs = StreamFactory::createInputStream(path);
     shared_ptr<Grammar> grammar(Grammar::loadFromStream(*ifs, *tag_set_));
     grammar_.push_back(grammar);
 }

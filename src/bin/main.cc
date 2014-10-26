@@ -59,8 +59,8 @@ int main(int argc, char * argv[]) {
     Tracer::setTraceLevel(ap->getInteger("trace-level"));
     
     // open input/output streams
-    shared_ptr<InputStream> ifs = StreamFactory::getInputStream(ap->getString("input"));
-    shared_ptr<OutputStream> ofs = StreamFactory::getOutputStream(ap->getString("output"));
+    shared_ptr<InputStream> ifs = StreamFactory::createInputStream(ap->getString("input"));
+    shared_ptr<OutputStream> ofs = StreamFactory::createOutputStream(ap->getString("output"));
 
     // select parser
     shared_ptr<Parser> parser = ParserFactory::create(*ap);
