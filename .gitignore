@@ -1,8 +1,11 @@
 *~
+*.la
+*.lo
+*.m4
 *.o
 .nfs*
 .deps
-aclocal.m4
+.libs
 autom4te.cache
 autoscan.log
 ckylark
@@ -11,6 +14,7 @@ configure
 depcomp
 gmon.*
 install-sh
+libtool
 ltmain.sh
 Makefile
 Makefile.in
