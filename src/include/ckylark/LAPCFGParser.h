@@ -9,8 +9,7 @@
 #include <ckylark/Lexicon.h>
 #include <ckylark/Grammar.h>
 #include <ckylark/Tree.h>
-
-#include <boost/multi_array.hpp>
+#include <ckylark/SignatureEstimator.h>
 
 #include <memory>
 
@@ -55,6 +54,7 @@ private:
     std::shared_ptr<TagSet> tag_set_;
     std::vector<std::shared_ptr<Lexicon> > lexicon_;
     std::vector<std::shared_ptr<Grammar> > grammar_;
+    std::shared_ptr<SignatureEstimator> sig_est_;
 
     int fine_level_;
     double prune_threshold_;

@@ -3,6 +3,7 @@
 #include <ckylark/Mapping.h>
 #include <ckylark/ModelProjector.h>
 #include <ckylark/Tracer.h>
+#include <ckylark/BerkeleySignatureEstimator.h>
 #include <ckylark/MaxScalingFactor.h>
 #include <ckylark/OOVLexiconSmoother.h>
 #include <ckylark/StreamFactory.h>
@@ -43,6 +44,10 @@ shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(const string & path)
     parser->generateCoarseModels();
     parser->setFineLevel(-1);
 
+    parser->sig_est_.reset(new BerkeleySignatureEstimator(
+        BerkeleySignatureEstimator::English,
+        *parser->word_table_));
+
     int finest_level = parser->tag_set_->getDepth() - 1;
     auto & finest_lexicon = parser->getLexicon(finest_level);
     auto & finest_grammar = parser->getGrammar(finest_level);
@@ -61,10 +66,10 @@ void LAPCFGParser::loadWordTable(const string & path) {
     string line;
     while (ifs->readLine(line)) {
         boost::trim(line);
-        if (line.size() >= 3 && line.substr(0, 3) == "UNK") {
-            // skip UNK* entries
-            continue;
-        }
+        //if (line.size() >= 3 && line.substr(0, 3) == "UNK") {
+        //    // skip UNK* entries
+        //    continue;
+        //}
         word_table_->addWord(line);
     }
 }
@@ -486,12 +491,19 @@ shared_ptr<Tree<string> > LAPCFGParser::getDefaultParse() const {
 vector<int> LAPCFGParser::makeWordIDList(const vector<string> & sentence) const {
     const int num_words = sentence.size();
     vector<int> wid_list(num_words);
-    //cerr << "  WID:";
+    cerr << "  WID:";
     for (int i = 0; i < num_words; ++i) {
-        wid_list[i] = word_table_->getId(sentence[i]);
-        //cerr << " " << wid_list[i];
+        int wid = word_table_->getId(sentence[i]);
+        if (wid == -1) {
+            string signature = sig_est_->getSignature(sentence, i);
+            wid = word_table_->getId(signature);
+            cerr << " " << wid << "(" << signature << ")";
+        } else {
+            cerr << " " << wid_list[i];
+        }
+        wid_list[i] = wid;
     }
-    //cerr << endl;
+    cerr << endl;
     return wid_list;
 }
 

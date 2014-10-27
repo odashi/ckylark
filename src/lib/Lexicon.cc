@@ -52,13 +52,13 @@ shared_ptr<Lexicon> Lexicon::loadFromStream(
         int tid = tag_set.getTagId(tag);
         int wid = word_table.getId(word);
         if (wid == -1) {
-            if (word.size() >= 3 && word.substr(0, 3) == "UNK") {
+            //if (word.size() >= 3 && word.substr(0, 3) == "UNK") {
                 // sum all UNK* entries (nothing to do here)
-            } else {
+            //} else {
                 // skip OOV words
                 cerr << "skipped: " << tag << " -> " << word << endl;
                 continue;
-            }
+            //}
         }
 
         string ss = line.substr(pos2+1);

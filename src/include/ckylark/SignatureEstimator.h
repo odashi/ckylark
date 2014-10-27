@@ -17,7 +17,7 @@ public:
     virtual ~SignatureEstimator() {}
 
     // estimate the signature of the location-th word in the sentence
-    std::string getSignature(const std::vector<std::string> & sentence, size_t location);
+    virtual std::string getSignature(const std::vector<std::string> & sentence, size_t location) = 0;
 
 }; // class SignatureEstimator
 
