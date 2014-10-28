@@ -491,19 +491,23 @@ shared_ptr<Tree<string> > LAPCFGParser::getDefaultParse() const {
 vector<int> LAPCFGParser::makeWordIDList(const vector<string> & sentence) const {
     const int num_words = sentence.size();
     vector<int> wid_list(num_words);
-    cerr << "  WID:";
+    
+    Tracer::print(1, "  WID:");
+
     for (int i = 0; i < num_words; ++i) {
         int wid = word_table_->getId(sentence[i]);
         if (wid == -1) {
+            // estimate signature
             string signature = sig_est_->getSignature(sentence, i);
             wid = word_table_->getId(signature);
-            cerr << " " << wid << "(" << signature << ")";
+            Tracer::print(1, (boost::format(" %d(%s)") % wid % signature).str());
         } else {
-            cerr << " " << wid_list[i];
+            Tracer::print(1, (boost::format(" %d") % wid).str());
         }
         wid_list[i] = wid;
     }
-    cerr << endl;
+    
+    Tracer::println(1);
     return wid_list;
 }
 
