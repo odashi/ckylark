@@ -74,7 +74,9 @@ private:
     
     std::shared_ptr<Tree<std::string> > getDefaultParse() const;
 
-    std::vector<int> makeWordIDList(const std::vector<std::string> & sentence) const;
+    std::vector<int> makeWordIdList(const std::vector<std::string> & sentence) const;
+
+    std::vector<int> makeTagIdList(const std::vector<std::string> & sentence) const;
 
     void initializeCharts(
         CKYTable<bool> & allowed_tag,
@@ -84,7 +86,7 @@ private:
         std::vector<std::vector<Extent> > & extent,
         int cur_level) const;
 
-    void setInsideScoresByLexicon(
+    void setTerminalScores(
         const CKYTable<bool> & allowed_tag,
         const CKYTable<std::vector<bool> > & allowed_sub,
         CKYTable<std::vector<double> > & inside,

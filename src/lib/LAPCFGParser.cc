@@ -131,7 +131,8 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
         return ParserResult { getDefaultParse(), true, -1 };
     }
 
-    vector<int> wid_list = makeWordIDList(sentence);
+    vector<int> wid_list = makeWordIdList(sentence);
+    vector<int> tid_list = makeTagIdList(sentence);
 
     CKYTable<bool> allowed_tag(num_words, num_tags);
     CKYTable<vector<bool> > allowed_sub(num_words, num_tags);
@@ -148,7 +149,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
     for (int level = 0; level <= final_level_to_try; ++level) {
         initializeCharts(allowed_tag, allowed_sub, inside, outside, extent, level);
         //cout << "  init" << endl;
-        setInsideScoresByLexicon(allowed_tag, allowed_sub, inside, wid_list, level);
+        setTerminalScores(allowed_tag, allowed_sub, inside, wid_list, level);
         //cout << "  lexicon" << endl;
         calculateInsideScores(allowed_tag, allowed_sub, inside, extent, level);
         //cout << "  inside" << endl;
@@ -488,11 +489,11 @@ shared_ptr<Tree<string> > LAPCFGParser::getDefaultParse() const {
     return shared_ptr<Tree<string> >(new Tree<string>(""));
 }
 
-vector<int> LAPCFGParser::makeWordIDList(const vector<string> & sentence) const {
+vector<int> LAPCFGParser::makeWordIdList(const vector<string> & sentence) const {
     const int num_words = sentence.size();
     vector<int> wid_list(num_words);
     
-    Tracer::print(1, "  WID:");
+    Tracer::print(2, "  WID:");
 
     for (int i = 0; i < num_words; ++i) {
         int wid = word_table_->getId(sentence[i]);
@@ -500,15 +501,39 @@ vector<int> LAPCFGParser::makeWordIDList(const vector<string> & sentence) const 
             // estimate signature
             string signature = sig_est_->getSignature(sentence, i);
             wid = word_table_->getId(signature);
-            Tracer::print(1, (boost::format(" %d(%s)") % wid % signature).str());
+            Tracer::print(2, (boost::format(" %d(%s)") % wid % signature).str());
         } else {
-            Tracer::print(1, (boost::format(" %d") % wid).str());
+            Tracer::print(2, (boost::format(" %d") % wid).str());
         }
         wid_list[i] = wid;
     }
     
-    Tracer::println(1);
+    Tracer::println(2);
     return wid_list;
+}
+
+vector<int> LAPCFGParser::makeTagIdList(const vector<string> & sentence) const {
+    const int num_words = sentence.size();
+    vector<int> tid_list(num_words);
+
+    Tracer::print(2, "  TID:");
+
+    for (int i = 0; i < num_words; ++i) {
+        const string & word = sentence[i];
+        int tid = -1;
+        // grammar tag representation is [FOO]
+        if (word.size() >= 2 && word[0] == '[' && word[word.size() - 1] == ']') {
+            const string name = word.substr(1, word.size() - 2);
+            tid = tag_set_->getTagId(name);
+            Tracer::print(2, (boost::format(" %d(%s)") % tid % name).str());
+        } else {
+            Tracer::print(2, (boost::format(" %d") % tid).str());
+        }
+        tid_list[i] = tid;
+    }
+
+    Tracer::println(2);
+    return tid_list;
 }
 
 void LAPCFGParser::initializeCharts(
@@ -573,7 +598,7 @@ void LAPCFGParser::initializeCharts(
     }
 }
 
-void LAPCFGParser::setInsideScoresByLexicon(
+void LAPCFGParser::setTerminalScores(
     const CKYTable<bool> & allowed_tag,
     const CKYTable<vector<bool> > & allowed_sub,
     CKYTable<vector<double> > & inside,
