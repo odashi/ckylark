@@ -33,7 +33,7 @@ public:
 
     static std::shared_ptr<LAPCFGParser> loadFromBerkeleyDump(const std::string & path);
 
-    virtual ParserResult parse(const std::vector<std::string> & sentence) const;
+    virtual ParserResult parse(const std::vector<std::string> & sentence, bool partial = false) const;
 
     const Dictionary & getWordTable() const { return *word_table_; }
     const TagSet & getTagSet() const { return *tag_set_; }
@@ -64,7 +64,8 @@ private:
 
     ParserResult generateMaxRuleOneBestParse(
         const std::vector<std::string> & sentence,
-        int final_level_to_try) const;
+        int final_level_to_try,
+        bool partial) const;
 
     void loadWordTable(const std::string & path);
     void loadTagSet(const std::string & path);
@@ -91,7 +92,9 @@ private:
         const CKYTable<std::vector<bool> > & allowed_sub,
         CKYTable<std::vector<double> > & inside,
         const std::vector<int> & wid_list,
-        int cur_level) const;
+        const std::vector<int> & tid_list,
+        int cur_level,
+        bool partial) const;
 
     void calculateInsideScores(
         const CKYTable<bool> & allowed_tag,

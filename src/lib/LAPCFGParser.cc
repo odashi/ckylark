@@ -107,12 +107,12 @@ void LAPCFGParser::generateCoarseModels() {
     }
 }
 
-ParserResult LAPCFGParser::parse(const vector<string> & sentence) const {
-    ParserResult result = generateMaxRuleOneBestParse(sentence, fine_level_);
+ParserResult LAPCFGParser::parse(const vector<string> & sentence, bool partial) const {
+    ParserResult result = generateMaxRuleOneBestParse(sentence, fine_level_, partial);
 
     // if full-level parsing is failed, rollback coarse grammar and retry parsing
     if (!result.succeeded && result.final_level > 0) {
-        result = generateMaxRuleOneBestParse(sentence, result.final_level - 1);
+        result = generateMaxRuleOneBestParse(sentence, result.final_level - 1, partial);
     }
 
     return result;
@@ -120,7 +120,8 @@ ParserResult LAPCFGParser::parse(const vector<string> & sentence) const {
 
 ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
     const vector<string> & sentence,
-    int final_level_to_try) const {
+    int final_level_to_try,
+    bool partial) const {
     
     const int num_words = sentence.size();
     const int num_tags = tag_set_->numTags();
@@ -149,7 +150,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
     for (int level = 0; level <= final_level_to_try; ++level) {
         initializeCharts(allowed_tag, allowed_sub, inside, outside, extent, level);
         //cout << "  init" << endl;
-        setTerminalScores(allowed_tag, allowed_sub, inside, wid_list, level);
+        setTerminalScores(allowed_tag, allowed_sub, inside, wid_list, tid_list, level, partial);
         //cout << "  lexicon" << endl;
         calculateInsideScores(allowed_tag, allowed_sub, inside, extent, level);
         //cout << "  inside" << endl;
@@ -275,26 +276,49 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
                     }
                 }
             } else {
-                // process lexicon
                 int wid = wid_list[begin];
+                int tid = tid_list[begin];
                 double word_scaling = fine_lexicon.getScalingFactor(wid);
 
-                for (int tag = 0; tag < num_tags; ++tag) {
-                    if (!allowed_tag.at(begin, end, tag)) continue;
-                    if (!smoother.prepare(tag, wid)) continue;
-                    int num_sub = tag_set_->numSubtags(tag, final_level_to_try);
+                if (partial && tid != -1) {
+
+                    // if this condition is false, parsing maybe fails
+                    if (!allowed_tag.at(begin, end, tid)) continue;
+
+                    // process abstract grammar tags
+                    int num_sub = tag_set_->numSubtags(tid, final_level_to_try);
                     double rule_score = 0.0;
 
                     for (int sub = 0; sub < num_sub; ++sub) {
-                        if (!allowed_sub.at(begin, end, tag)[sub]) continue;
-                        double po = outside.at(begin, end, tag)[sub];
-                        double beta = word_scaling * smoother.getScore(sub);
-                        rule_score += po * beta;
+                        if (!allowed_sub.at(begin, end, tid)[sub]) continue;
+                        rule_score += outside.at(begin, end, tid)[sub]; // rule_score += po;
                     }
 
                     if (rule_score == 0.0) continue;
 
-                    maxc_log_score.at(begin, end, tag) = log(rule_score) - log_normalizer;
+                    maxc_log_score.at(begin, end, tid) = log(rule_score) - log_normalizer;
+
+                } else {
+
+                    // process lexicon
+
+                    for (int tag = 0; tag < num_tags; ++tag) {
+                        if (!allowed_tag.at(begin, end, tag)) continue;
+                        if (!smoother.prepare(tag, wid)) continue;
+                        int num_sub = tag_set_->numSubtags(tag, final_level_to_try);
+                        double rule_score = 0.0;
+
+                        for (int sub = 0; sub < num_sub; ++sub) {
+                            if (!allowed_sub.at(begin, end, tag)[sub]) continue;
+                            double po = outside.at(begin, end, tag)[sub];
+                            double beta = word_scaling * smoother.getScore(sub);
+                            rule_score += po * beta;
+                        }
+
+                        if (rule_score == 0.0) continue;
+
+                        maxc_log_score.at(begin, end, tag) = log(rule_score) - log_normalizer;
+                    }
                 }
             }
 
@@ -603,7 +627,9 @@ void LAPCFGParser::setTerminalScores(
     const CKYTable<vector<bool> > & allowed_sub,
     CKYTable<vector<double> > & inside,
     const vector<int> & wid_list,
-    int cur_level) const {
+    const vector<int> & tid_list,
+    int cur_level,
+    bool partial) const {
 
     const int num_words = allowed_tag.numWords();
     const int num_tags = allowed_tag.numTags();
@@ -613,20 +639,38 @@ void LAPCFGParser::setTerminalScores(
     for (int begin = 0; begin < num_words; ++begin) {
         int end = begin + 1;
         int wid = wid_list[begin];
-        double word_scaling = cur_lexicon.getScalingFactor(wid);
-        
-        for (int tag = 0; tag < num_tags; ++tag) {
-            if (!allowed_tag.at(begin, end, tag)) continue;
-            if (!smoother.prepare(tag, wid)) continue;
-            int num_sub = tag_set_->numSubtags(tag, cur_level);
-            
+        int tid = tid_list[begin];
+
+        if (partial && tid != -1) {
+
+            // if this condition is false, parsing maybe fails
+            if (!allowed_tag.at(begin, end, tid)) continue;
+
+            // set 1.0 into specific abstract tag
+            int num_sub = tag_set_->numSubtags(tid, cur_level);
             for (int sub = 0; sub < num_sub; ++sub) {
-                if (!allowed_sub.at(begin, end, tag)[sub]) continue;
-                inside.at(begin, end, tag)[sub] = word_scaling * smoother.getScore(sub);
+                if (!allowed_sub.at(begin, end, tid)[sub]) continue;
+                inside.at(begin, end, tid)[sub] = 1.0;
+            }
+
+        } else {
+            
+            // process lexicon
+            double word_scaling = cur_lexicon.getScalingFactor(wid);
+
+            for (int tag = 0; tag < num_tags; ++tag) {
+                if (!allowed_tag.at(begin, end, tag)) continue;
+                if (!smoother.prepare(tag, wid)) continue;
+                int num_sub = tag_set_->numSubtags(tag, cur_level);
+            
+                for (int sub = 0; sub < num_sub; ++sub) {
+                    if (!allowed_sub.at(begin, end, tag)[sub]) continue;
+                    inside.at(begin, end, tag)[sub] = word_scaling * smoother.getScore(sub);
                 
-                //cerr << begin << "(" << sentence[begin] << ")->"
-                //    << tag_set_->getTagName(tag) << "[" << sub << "] = "
-                //    << inside.at(begin, end, tag)[sub] << endl;
+                    //cerr << begin << "(" << sentence[begin] << ")->"
+                    //    << tag_set_->getTagName(tag) << "[" << sub << "] = "
+                    //    << inside.at(begin, end, tag)[sub] << endl;
+                }
             }
         }
     }

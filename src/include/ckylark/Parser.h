@@ -19,7 +19,7 @@ public:
     virtual ~Parser() {}
 
     // generate best 1-parse
-    virtual ParserResult parse(const std::vector<std::string> & sentence) const = 0;
+    virtual ParserResult parse(const std::vector<std::string> & sentence, bool partial) const = 0;
 
 }; // class Parser
 

@@ -39,6 +39,8 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
 
     ap->addSwitchArgument("add-root-tag", "add ROOT tag into output tree");
 
+    ap->addSwitchArgument("partial", "parse partial (grammar tag contained) sentence");
+
     bool ret = ap->parseArgs(argc, argv);
 
     if (ap->getSwitch("help")) {
@@ -90,7 +92,7 @@ int main(int argc, char * argv[]) {
         Tracer::println(1);
 
         timer.start();
-        ParserResult result = parser->parse(ls);
+        ParserResult result = parser->parse(ls, ap->getSwitch("partial"));
         double lap = timer.stop();
 
         string repr = Formatter::ToPennTreeBank(*result.best_parse, ap->getSwitch("add-root-tag"));
