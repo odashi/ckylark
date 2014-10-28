@@ -21,7 +21,9 @@ public:
     int getId(const std::string & word) const;
     std::string getWord(int id) const;
 
-    size_t size() const { return ids_.size(); }
+    inline size_t size() const { return ids_.size(); }
+
+    inline const std::vector<std::string> & getWordList() const { return rev_; }
 
 private:
     std::map<std::string, int> ids_;

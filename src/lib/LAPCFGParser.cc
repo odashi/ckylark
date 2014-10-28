@@ -180,7 +180,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
     const double NEG_INFTY = -1e20;
     const Lexicon & fine_lexicon = getLexicon(final_level_to_try);
     const Grammar & fine_grammar = getGrammar(final_level_to_try);
-    OOVLexiconSmoother smoother(fine_lexicon, smooth_unklex_);
+    OOVLexiconSmoother smoother(fine_lexicon, *word_table_, smooth_unklex_);
 
     for (int len = 1; len <= num_words; ++len) {
         for (int begin = 0; begin < num_words - len + 1; ++begin) {
@@ -583,7 +583,7 @@ void LAPCFGParser::setInsideScoresByLexicon(
     const int num_words = allowed_tag.numWords();
     const int num_tags = allowed_tag.numTags();
     const Lexicon & cur_lexicon = getLexicon(cur_level);
-    OOVLexiconSmoother smoother(cur_lexicon, smooth_unklex_);
+    OOVLexiconSmoother smoother(cur_lexicon, *word_table_, smooth_unklex_);
 
     for (int begin = 0; begin < num_words; ++begin) {
         int end = begin + 1;

@@ -66,6 +66,7 @@ public:
 
     double getScalingFactor(int word_id) const;
 
+    inline const TagSet & getTagSet() const { return tag_set_; }
     inline int getLevel() const { return level_; }
 
     inline bool hasEntry(int tag_id) const { return !entry_[tag_id].empty(); };
