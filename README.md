@@ -1,7 +1,7 @@
 Ckylark
 =======
 
-`Ckylark` - CKY-based latent annotated rule ekstractor
+`Ckylark` - An Latent Annotated PCFG Parser
 
 
 About
@@ -64,6 +64,10 @@ models.
 You can also use your original models made by `GrammarTrainer`
 and `WriteGrammarToTextFiles` of `Berkeley Parser`.
 
+And you can also use the pre-trained models listed below:
+
+[Ckylark Models (site language; Japanese)]: http://odaemon.com/?page=tools_ckylark_models "Ckylark Models"
+
 If you want to see all options, please type below:
 
     src/bin/ckylark --help
@@ -77,6 +81,12 @@ Contributors
 * Graham Neubig (@neubig)
 
 We are counting more contributions from you.
+
+
+Official Site
+-------------
+
+[Ckylark | Yusuke Oda]: http://odaemon.com/?page=tools_ckylark "Ckylark | Yusuke Oda"
 
 
 Contact
