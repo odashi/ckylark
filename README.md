@@ -66,7 +66,7 @@ and `WriteGrammarToTextFiles` of `Berkeley Parser`.
 
 And you can also use the pre-trained models listed below:
 
-[Ckylark Models (site language; Japanese)]: http://odaemon.com/?page=tools_ckylark_models "Ckylark Models"
+[Ckylark Models (site language; Japanese)](http://odaemon.com/?page=tools_ckylark_models "Ckylark Models")
 
 If you want to see all options, please type below:
 
@@ -86,7 +86,7 @@ We are counting more contributions from you.
 Official Site
 -------------
 
-[Ckylark | Yusuke Oda]: http://odaemon.com/?page=tools_ckylark "Ckylark | Yusuke Oda"
+[Ckylark | Yusuke Oda](http://odaemon.com/?page=tools_ckylark "Ckylark | Yusuke Oda")
 
 
 Contact
