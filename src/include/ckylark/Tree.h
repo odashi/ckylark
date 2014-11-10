@@ -42,7 +42,7 @@ public:
     inline size_t numChildren() const { return children_.size(); }
 
     inline void addChild(Tree * child) {
-        if (!child->isRoot()) throw std::runtime_error("Tree: already has parent.");
+        if (!child->isRoot()) throw std::runtime_error("Tree: already has parent");
         children_.push_back(child);
         child->parent_ = this;
     }
@@ -51,7 +51,7 @@ public:
     inline T & value() { return value_; }
     
     inline const Tree<T> & parent() const {
-        if (isRoot()) throw std::runtime_error("Tree: not has parent.");
+        if (isRoot()) throw std::runtime_error("Tree: not has parent");
         return *parent_;
     }
     inline const Tree<T> & child(size_t index) const {
