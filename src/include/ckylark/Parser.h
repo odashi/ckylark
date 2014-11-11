@@ -2,6 +2,7 @@
 #define CKYLARK_PARSER_H_
 
 #include <ckylark/ParserResult.h>
+#include <ckylark/ParserSetting.h>
 
 #include <vector>
 #include <string>
@@ -19,7 +20,9 @@ public:
     virtual ~Parser() {}
 
     // generate best 1-parse
-    virtual ParserResult parse(const std::vector<std::string> & sentence, bool partial) const = 0;
+    virtual ParserResult parse(
+        const std::vector<std::string> & sentence,
+        const ParserSetting & setting) const = 0;
 
 }; // class Parser
 

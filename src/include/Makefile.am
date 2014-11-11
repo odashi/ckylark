@@ -19,6 +19,7 @@ nobase_include_HEADERS = \
     ckylark/Parser.h \
     ckylark/ParserFactory.h \
     ckylark/ParserResult.h \
+    ckylark/ParserSetting.h \
     ckylark/PLFLatticeLoader.h \
     ckylark/Rule.h \
     ckylark/ScalingFactor.h \

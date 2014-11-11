@@ -107,12 +107,15 @@ void LAPCFGParser::generateCoarseModels() {
     }
 }
 
-ParserResult LAPCFGParser::parse(const vector<string> & sentence, bool partial) const {
-    ParserResult result = generateMaxRuleOneBestParse(sentence, fine_level_, partial);
+ParserResult LAPCFGParser::parse(
+    const vector<string> & sentence,
+    const ParserSetting & setting) const {
+    
+    ParserResult result = generateMaxRuleOneBestParse(sentence, setting, fine_level_);
 
     // if full-level parsing is failed, rollback coarse grammar and retry parsing
     if (!result.succeeded && result.final_level > 0) {
-        result = generateMaxRuleOneBestParse(sentence, result.final_level - 1, partial);
+        result = generateMaxRuleOneBestParse(sentence, setting, result.final_level - 1);
     }
 
     return result;
@@ -120,8 +123,8 @@ ParserResult LAPCFGParser::parse(const vector<string> & sentence, bool partial) 
 
 ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
     const vector<string> & sentence,
-    int final_level_to_try,
-    bool partial) const {
+    const ParserSetting & setting,
+    int final_level_to_try) const {
     
     const int num_words = sentence.size();
     const int num_tags = tag_set_->numTags();
@@ -150,7 +153,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
     for (int level = 0; level <= final_level_to_try; ++level) {
         initializeCharts(allowed_tag, allowed_sub, inside, outside, extent, level);
         //cout << "  init" << endl;
-        setTerminalScores(allowed_tag, allowed_sub, inside, wid_list, tid_list, level, partial);
+        setTerminalScores(allowed_tag, allowed_sub, inside, wid_list, tid_list, level, setting.partial);
         //cout << "  lexicon" << endl;
         calculateInsideScores(allowed_tag, allowed_sub, inside, extent, level);
         //cout << "  inside" << endl;
@@ -280,7 +283,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
                 int tid = tid_list[begin];
                 double word_scaling = fine_lexicon.getScalingFactor(wid);
 
-                if (partial && tid != -1) {
+                if (setting.partial && tid != -1) {
 
                     // if this condition is false, parsing maybe fails
                     if (!allowed_tag.at(begin, end, tid)) continue;

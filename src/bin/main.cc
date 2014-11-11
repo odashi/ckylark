@@ -5,6 +5,7 @@
 #include <ckylark/Timer.h>
 #include <ckylark/Tracer.h>
 #include <ckylark/ParserResult.h>
+#include <ckylark/ParserSetting.h>
 #include <ckylark/StreamFactory.h>
 
 #include <boost/algorithm/string.hpp>
@@ -67,6 +68,11 @@ int main(int argc, char * argv[]) {
     // select parser
     shared_ptr<Parser> parser = ParserFactory::create(*ap);
 
+    // make parser setting
+    ParserSetting setting;
+    setting.partial = ap->getSwitch("partial");
+    setting.force_binary = false;
+
     Timer timer;
 
     Tracer::println(1, "Ready");
@@ -92,7 +98,7 @@ int main(int argc, char * argv[]) {
         Tracer::println(1);
 
         timer.start();
-        ParserResult result = parser->parse(ls, ap->getSwitch("partial"));
+        ParserResult result = parser->parse(ls, setting);
         double lap = timer.stop();
 
         string repr = Formatter::ToPennTreeBank(*result.best_parse, ap->getSwitch("add-root-tag"));

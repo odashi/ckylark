@@ -33,7 +33,9 @@ public:
 
     static std::shared_ptr<LAPCFGParser> loadFromBerkeleyDump(const std::string & path);
 
-    virtual ParserResult parse(const std::vector<std::string> & sentence, bool partial = false) const;
+    virtual ParserResult parse(
+        const std::vector<std::string> & sentence,
+        const ParserSetting & setting) const;
 
     const Dictionary & getWordTable() const { return *word_table_; }
     const TagSet & getTagSet() const { return *tag_set_; }
@@ -64,8 +66,8 @@ private:
 
     ParserResult generateMaxRuleOneBestParse(
         const std::vector<std::string> & sentence,
-        int final_level_to_try,
-        bool partial) const;
+        const ParserSetting & setting,
+        int final_level_to_try) const;
 
     void loadWordTable(const std::string & path);
     void loadTagSet(const std::string & path);
