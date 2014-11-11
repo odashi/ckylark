@@ -17,6 +17,7 @@ libckylark_la_SOURCES = \
     OOVLexiconSmoother.cc \
     ParserFactory.cc \
     PLFLatticeLoader.cc \
+    POSTagFormatter.cc \
     SExprFormatter.cc \
     StdStream.cc \
     StreamFactory.cc \

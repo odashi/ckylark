@@ -8,8 +8,8 @@ namespace Ckylark {
 // S-expression (Penn Treebank) formatted output generator
 class SExprFormatter : public Formatter {
 
-    SExprFormatter(const Formatter &) = delete;
-    SExprFormatter & operator=(const Formatter &) = delete;
+    SExprFormatter(const SExprFormatter &) = delete;
+    SExprFormatter & operator=(const SExprFormatter &) = delete;
 
 public:
     SExprFormatter(bool add_root_tag);
