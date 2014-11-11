@@ -406,8 +406,13 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
     // build max-rule parse tree
 
     function<void(Tree<string> &, Tree<string> *)> addChildOrCoalesce
-        = [](Tree<string> & parent_tree, Tree<string> * child_tree) {
+        = [&](Tree<string> & parent_tree, Tree<string> * child_tree) {
     
+        if (setting.force_binary) {
+            parent_tree.addChild(child_tree);
+            return;
+        }
+
         string ptag = parent_tree.value();
         string ctag = child_tree->value();
         string pbar = ptag;

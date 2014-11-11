@@ -41,6 +41,7 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     ap->addSwitchArgument("add-root-tag", "add ROOT tag into output tree");
 
     ap->addSwitchArgument("partial", "parse partial (grammar tag contained) sentence");
+    ap->addSwitchArgument("force-binary", "do not generate greater rules than binary");
 
     bool ret = ap->parseArgs(argc, argv);
 
@@ -71,7 +72,7 @@ int main(int argc, char * argv[]) {
     // make parser setting
     ParserSetting setting;
     setting.partial = ap->getSwitch("partial");
-    setting.force_binary = false;
+    setting.force_binary = ap->getSwitch("force-binary");
 
     Timer timer;
 
