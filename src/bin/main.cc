@@ -1,9 +1,9 @@
 #include <ckylark/ArgumentParser.h>
-#include <ckylark/SExprFormatter.h>
-#include <ckylark/ParserFactory.h>
+#include <ckylark/FormatterFactory.h>
 #include <ckylark/Mapping.h>
 #include <ckylark/Timer.h>
 #include <ckylark/Tracer.h>
+#include <ckylark/ParserFactory.h>
 #include <ckylark/ParserResult.h>
 #include <ckylark/ParserSetting.h>
 #include <ckylark/StreamFactory.h>
@@ -24,23 +24,28 @@ using namespace Ckylark;
 unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     unique_ptr<ArgumentParser> ap(new ArgumentParser("ckylark -model <model-prefix> [options]"));
 
+    // parsing model
     ap->addStringArgument("method", "lapcfg", "parsing strategy", false);
 
+    // informations
     ap->addSwitchArgument("help", "print this manual and exit");
     ap->addIntegerArgument("trace-level", 0, "detail level of trace text", false);
     
+    // input/output
     ap->addStringArgument("model", "", "prefix of model path", true);
-    
     ap->addStringArgument("input", "/dev/stdin", "input file", false);
     ap->addStringArgument("output", "/dev/stdout", "output file", false);
 
+    // parsing parameters
     ap->addIntegerArgument("fine-level", -1, "most fine level to parse, or -1 (use all level)", false);
     ap->addRealArgument("prune-threshold", 1e-5, "coarse-to-fine pruning threshold", false);
     ap->addRealArgument("smooth-unklex", 1e-10, "smoothing strength using UNK lexicon", false);
-
-    ap->addSwitchArgument("add-root-tag", "add ROOT tag into output tree");
-
     ap->addSwitchArgument("partial", "parse partial (grammar tag contained) sentence");
+
+    // output format
+    ap->addStringArgument("output-format", "sexpr", "output format ('sexpr', 'postag')", false);
+    ap->addSwitchArgument("add-root-tag", "add ROOT tag into output tree (for 'sexpr' format)");
+    ap->addStringArgument("separator", "/", "word/POS separator (for 'postag' format)", false);
     ap->addSwitchArgument("force-binary", "do not generate greater rules than binary");
 
     bool ret = ap->parseArgs(argc, argv);
@@ -66,17 +71,18 @@ int main(int argc, char * argv[]) {
     shared_ptr<InputStream> ifs = StreamFactory::createInputStream(ap->getString("input"));
     shared_ptr<OutputStream> ofs = StreamFactory::createOutputStream(ap->getString("output"));
 
-    // select parser
-    shared_ptr<Parser> parser = ParserFactory::create(*ap);
+    // create formatter
+    shared_ptr<Formatter> formatter = FormatterFactory::create(*ap);
 
-    // select formatter
-    shared_ptr<Formatter> formatter(new SExprFormatter(ap->getSwitch("add-root-tag")));
-
-    // make parser setting
+    // set parser settings
     ParserSetting setting;
     setting.partial = ap->getSwitch("partial");
     setting.force_binary = ap->getSwitch("force-binary");
 
+    // create parser
+    shared_ptr<Parser> parser = ParserFactory::create(*ap);
+
+    // make parser setting
     Timer timer;
 
     Tracer::println(1, "Ready");

@@ -6,6 +6,7 @@ libckylark_la_SOURCES = \
     ArgumentParser.cc \
     BerkeleySignatureEstimator.cc \
     Dictionary.cc \
+    FormatterFactory.cc \
     Grammar.cc \
     GZipStream.cc \
     LAPCFGParser.cc \

@@ -5,6 +5,7 @@ nobase_include_HEADERS = \
     ckylark/CharUtil.h \
     ckylark/Dictionary.h \
     ckylark/Formatter.h \
+    ckylark/FormatterFactory.h \
     ckylark/Grammar.h \
     ckylark/GZipStream.h \
     ckylark/LAPCFGParser.h \
