@@ -6,7 +6,6 @@ libckylark_la_SOURCES = \
     ArgumentParser.cc \
     BerkeleySignatureEstimator.cc \
     Dictionary.cc \
-    Formatter.cc \
     Grammar.cc \
     GZipStream.cc \
     LAPCFGParser.cc \
@@ -18,6 +17,7 @@ libckylark_la_SOURCES = \
     OOVLexiconSmoother.cc \
     ParserFactory.cc \
     PLFLatticeLoader.cc \
+    SExprFormatter.cc \
     StdStream.cc \
     StreamFactory.cc \
     TagSet.cc \

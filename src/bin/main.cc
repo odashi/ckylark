@@ -1,5 +1,5 @@
 #include <ckylark/ArgumentParser.h>
-#include <ckylark/Formatter.h>
+#include <ckylark/SExprFormatter.h>
 #include <ckylark/ParserFactory.h>
 #include <ckylark/Mapping.h>
 #include <ckylark/Timer.h>
@@ -69,6 +69,9 @@ int main(int argc, char * argv[]) {
     // select parser
     shared_ptr<Parser> parser = ParserFactory::create(*ap);
 
+    // select formatter
+    shared_ptr<Formatter> formatter(new SExprFormatter(ap->getSwitch("add-root-tag")));
+
     // make parser setting
     ParserSetting setting;
     setting.partial = ap->getSwitch("partial");
@@ -102,7 +105,7 @@ int main(int argc, char * argv[]) {
         ParserResult result = parser->parse(ls, setting);
         double lap = timer.stop();
 
-        string repr = Formatter::ToPennTreeBank(*result.best_parse, ap->getSwitch("add-root-tag"));
+        string repr = formatter->generate(*result.best_parse);
         
         Tracer::println(1, "  Parse: " + repr);
         Tracer::println(1, (boost::format("  Time: %.3fs") % lap).str());

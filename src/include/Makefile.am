@@ -23,6 +23,7 @@ nobase_include_HEADERS = \
     ckylark/PLFLatticeLoader.h \
     ckylark/Rule.h \
     ckylark/ScalingFactor.h \
+    ckylark/SExprFormatter.h \
     ckylark/SignatureEstimator.h \
     ckylark/StdStream.h \
     ckylark/Stream.h \
