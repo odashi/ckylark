@@ -114,9 +114,9 @@ double Lexicon::getScalingFactor(int word_id) const {
     auto ent = scaling_.find(word_id);
     if (ent != scaling_.end()) {
         if (ent->second > 0.0) return 1.0 / ent->second;
-        else return 0.0;
+        else return 1.0;
     }
-    return 0.0;
+    return 1.0;
 }
 
 } // namespace Ckylark
