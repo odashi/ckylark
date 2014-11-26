@@ -10,7 +10,7 @@ struct ParserSetting {
     bool partial;
 
     // generate only unary and binary rules.
-    bool force_binary;
+    bool binarize;
 
 }; // struct ParserSetting
 

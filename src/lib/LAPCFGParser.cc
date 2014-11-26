@@ -408,7 +408,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
     function<void(Tree<string> &, Tree<string> *)> addChildOrCoalesce
         = [&](Tree<string> & parent_tree, Tree<string> * child_tree) {
     
-        if (setting.force_binary) {
+        if (setting.binarize) {
             parent_tree.addChild(child_tree);
             return;
         }

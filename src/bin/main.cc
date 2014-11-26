@@ -46,7 +46,7 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     ap->addStringArgument("output-format", "sexpr", "output format ('sexpr', 'postag')", false);
     ap->addSwitchArgument("add-root-tag", "add ROOT tag into output tree (for 'sexpr' format)");
     ap->addStringArgument("separator", "/", "word/POS separator (for 'postag' format)", false);
-    ap->addSwitchArgument("force-binary", "do not generate greater rules than binary");
+    ap->addSwitchArgument("binarize", "generates parse tree by only unary/binary rules");
 
     bool ret = ap->parseArgs(argc, argv);
 
@@ -77,7 +77,7 @@ int main(int argc, char * argv[]) {
     // set parser settings
     ParserSetting setting;
     setting.partial = ap->getSwitch("partial");
-    setting.force_binary = ap->getSwitch("force-binary");
+    setting.binarize = ap->getSwitch("binarize");
 
     // create parser
     shared_ptr<Parser> parser = ParserFactory::create(*ap);
