@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libckylark.la
 
-AM_CXXFLAGS = -I$(srcdir)/../include
+AM_CXXFLAGS = -I$(srcdir)/../include $(BOOST_CPPFLAGS)
 
 libckylark_la_SOURCES = \
     ArgumentParser.cc \
@@ -27,5 +27,5 @@ libckylark_la_SOURCES = \
     Timer.cc \
     Tracer.cc
 
-libckylark_la_LIBADD = -lboost_iostreams
-libckylark_la_LDFLAGS = -version-info 0:0:0
+libckylark_la_LIBADD = $(BOOST_IOSTREAMS_LIBADD)
+libckylark_la_LDFLAGS = -version-info 0:0:0 $(BOOST_IOSTREAMS_LDFLAGS)
