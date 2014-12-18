@@ -56,7 +56,7 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     }
 
     if (!ret) {
-        cerr << "(--help for more informations)" << endl;
+        cerr << "(--help for more information)" << endl;
         exit(0);
     }
 
