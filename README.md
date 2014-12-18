@@ -1,7 +1,7 @@
 Ckylark
 =======
 
-`Ckylark` - An Latent Annotated PCFG Parser
+`Ckylark` - A latent-annotated probabilistic context-free grammar (LAPCFG) parser.
 
 
 About
