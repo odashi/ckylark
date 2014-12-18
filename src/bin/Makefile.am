@@ -1,5 +1,5 @@
 AM_CXXFLAGS = -I$(srcdir)/../include
-LDADD = ../lib/libckylark.la
+LDADD = ../lib/libckylark.la $(BOOST_IOSTREAMS_LIBS)
 
 bin_PROGRAMS = ckylark
 
