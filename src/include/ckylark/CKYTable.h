@@ -16,6 +16,56 @@ public:
     CKYTable(size_t num_words, size_t num_tags)
         : num_words_(num_words)
         , num_tags_(num_tags) {
+
+        shift_ = new int[num_words_ + 1];
+        shift_[0] = -static_cast<int>(num_words) - 1; // dummy
+        for (size_t i = 1; i <= num_words; ++i) {
+            shift_[i] = shift_[i - 1] + (num_words - i + 2);
+        }
+
+        mem_ = new T[num_tags_ * ((num_words_ * (num_words_ + 1)) >> 1)];
+    }
+
+    ~CKYTable() {
+        delete[] shift_;
+        delete[] mem_;
+    }
+ 
+    inline const T & at(size_t begin, size_t end, size_t tag) const {
+        if (begin >= num_words_ || end > num_words_ || end <= begin || tag >= num_tags_)
+            throw std::runtime_error("CKYTable: invalid index");
+        return mem_[num_tags_ * (shift_[end - begin] + begin) + tag];
+    }
+
+    inline T & at(size_t begin, size_t end, size_t tag) {
+        return const_cast<T &>(static_cast<const CKYTable &>(*this).at(begin, end, tag));
+    }
+
+    inline size_t numWords() const { return num_words_; }
+    inline size_t numTags() const { return num_tags_; }
+
+private:
+    size_t num_words_;
+    size_t num_tags_;
+
+    int * shift_;
+
+    T * mem_;
+
+}; // class CKYTable
+
+/* below implementation calculates addresses by only + and <<, but needs much memories
+template <class T>
+class CKYTable {
+
+    CKYTable() = delete;
+    CKYTable(const CKYTable &) = delete;
+    CKYTable & operator=(const CKYTable &) = delete;
+
+public:
+    CKYTable(size_t num_words, size_t num_tags)
+        : num_words_(num_words)
+        , num_tags_(num_tags) {
     
         stride1_ = 0;
         while (static_cast<size_t>(1 << stride1_) < num_words_ + 1) {
@@ -53,8 +103,8 @@ private:
     size_t stride1_;
     size_t stride2_;
     T * mem_;
-
 }; // class CKYTable
+*/
 
 } // namespace Ckylark
 
