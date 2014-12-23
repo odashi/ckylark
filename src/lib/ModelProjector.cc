@@ -88,9 +88,9 @@ ModelProjector::ModelProjector(
             }
         }
 
-        double sum = 0.0;
+        //double sum = 0.0;
         for (int i = 0; i < num_fine_pos; ++i) {
-            sum += temp_count[i];
+            //sum += temp_count[i];
             exp_count[i] = temp_count[i];
             temp_count[i] = 0.0;
         }
