@@ -79,6 +79,7 @@ shared_ptr<Grammar> Grammar::loadFromStream(InputStream & stream, const TagSet &
             psc = stoi(ls[1]);
             lsc = stoi(ls[4]);
             score = stod(ls[5]);
+            if (pc == lc && psc == lsc) break;
             //cout << "unary: " << pc << ' ' << lc << ' ' << psc << ' ' << lsc << endl;
             if (cur_unary->parent() != pc || cur_unary->child() != lc) {
                 cur_unary = &grm->getUnaryRule(pc, lc);
