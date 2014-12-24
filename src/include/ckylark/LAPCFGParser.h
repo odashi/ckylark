@@ -8,6 +8,8 @@
 #include <ckylark/TagSet.h>
 #include <ckylark/Lexicon.h>
 #include <ckylark/Grammar.h>
+#include <ckylark/M1Lexicon.h>
+#include <ckylark/M1Grammar.h>
 #include <ckylark/Tree.h>
 #include <ckylark/SignatureEstimator.h>
 
@@ -56,6 +58,8 @@ private:
     std::shared_ptr<TagSet> tag_set_;
     std::vector<std::shared_ptr<Lexicon> > lexicon_;
     std::vector<std::shared_ptr<Grammar> > grammar_;
+    std::shared_ptr<M1Lexicon> m1_lexicon_;
+    std::shared_ptr<M1Grammar> m1_grammar_;
     std::shared_ptr<SignatureEstimator> sig_est_;
 
     int fine_level_;

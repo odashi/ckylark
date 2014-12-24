@@ -2,6 +2,7 @@
 
 #include <ckylark/Mapping.h>
 #include <ckylark/ModelProjector.h>
+#include <ckylark/M1ModelProjector.h>
 #include <ckylark/Tracer.h>
 #include <ckylark/BerkeleySignatureEstimator.h>
 #include <ckylark/MaxScalingFactor.h>
@@ -97,6 +98,7 @@ void LAPCFGParser::loadGrammar(const string & path) {
 void LAPCFGParser::generateCoarseModels() {
     const int depth = tag_set_->getDepth();
 
+    // generate Gn-1 ~ G0 grammar/lexicon
     for (int level = depth-2; level >= 0; --level) {
         Tracer::println(1, (boost::format("Generating coarse model (level=%d) ...") % level).str());
         
@@ -105,6 +107,12 @@ void LAPCFGParser::generateCoarseModels() {
         lexicon_.insert(lexicon_.begin(), projector.generateLexicon());
         grammar_.insert(grammar_.begin(), projector.generateGrammar());
     }
+
+    // generate G-1 grammar/lexicon
+    Tracer::println(1, "Generating G-1 model ...");
+    M1ModelProjector m1_projector(*word_table_, *tag_set_, *(lexicon_[0]), *(grammar_[0]));
+    m1_lexicon_ = m1_projector.generateLexicon();
+    m1_grammar_ = m1_projector.generateGrammar();
 }
 
 ParserResult LAPCFGParser::parse(
