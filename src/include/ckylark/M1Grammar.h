@@ -7,6 +7,13 @@
 
 namespace Ckylark {
 
+// G-1 Grammar
+// This grammar has only below rules:
+//   X -> X X
+//   X -> X r-lex
+//   X -> l-lex X
+//   X -> l-lex r-lex
+// X tag is indexed as ROOT tag of other grammar.
 class M1Grammar {
 
     M1Grammar() = delete;
@@ -15,22 +22,29 @@ class M1Grammar {
 
 public:
     M1Grammar(const TagSet & tag_set)
-        : score_(
-            tag_set.numTags(), vector<vector<double> >(
-                tag_set.numTags(), vector<double>(
-                    tag_set.numTags(), 0.0))) {}
+        : binary_(tag_set.numTags(), std::vector<double>(tag_set.numTags(), 0.0))
+        , unary_(tag_set.numTags(), 0.0) {}
     ~M1Grammar() {}
 
-    double getScore(int parent, int left, int right) const {
-        return score_[parent][left][right];
+    double getBinaryScore(int left, int right) const {
+        return binary_[left][right];
     }
     
-    void addScore(int parent, int left, int right, double delta) {
-        score_[parent][left][right] += delta;
+    void addBinaryScore(int left, int right, double delta) {
+        binary_[left][right] += delta;
+    }
+
+    double getUnaryScore(int child) const {
+        return unary_[child];
+    }
+
+    void addUnaryScore(int child, double delta) {
+        unary_[child] += delta;
     }
 
 private:
-    std::vector<std::vector<std::vector<double> > > score_;
+    std::vector<std::vector<double> > binary_;
+    std::vector<double> unary_;
 
 }; // class M1Grammar
 

@@ -5,7 +5,6 @@
 #include <ckylark/Dictionary.h>
 #include <ckylark/Stream.h>
 
-#include <iostream>
 #include <map>
 #include <memory>
 #include <vector>

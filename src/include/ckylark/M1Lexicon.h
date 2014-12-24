@@ -15,11 +15,11 @@ class M1Lexicon {
     M1Lexicon & operator=(const M1Lexicon &) = delete;
 
 public:
-    M1lexicon(const Dictionary word_table, const TagSet & tag_set)
+    M1Lexicon(const Dictionary & word_table, const TagSet & tag_set)
         : score_(
-            tag_set.numTags(), vector<double>(
-                word_table.size(), 0.0) {}
-    ~M1Lexicon()
+            tag_set.numTags(), std::vector<double>(
+                word_table.size(), 0.0)) {}
+    ~M1Lexicon() {}
 
     double getScore(int tag_id, int word_id) const {
         return score_[tag_id][word_id];

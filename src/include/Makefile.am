@@ -15,6 +15,7 @@ nobase_include_HEADERS = \
 	ckylark/LexiconSmoother.h \
 	ckylark/M1Grammar.h \
 	ckylark/M1Lexicon.h \
+	ckylark/M1ModelProjector.h \
 	ckylark/Mapping.h \
 	ckylark/MaxScalingFactor.h \
 	ckylark/ModelProjector.h \
