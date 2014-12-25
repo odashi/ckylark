@@ -26,19 +26,19 @@ public:
         , unary_(tag_set.numTags(), 0.0) {}
     ~M1Grammar() {}
 
-    double getBinaryScore(int left, int right) const {
+    inline double getBinaryScore(int left, int right) const {
         return binary_[left][right];
     }
     
-    void addBinaryScore(int left, int right, double delta) {
+    inline void addBinaryScore(int left, int right, double delta) {
         binary_[left][right] += delta;
     }
 
-    double getUnaryScore(int child) const {
+    inline double getUnaryScore(int child) const {
         return unary_[child];
     }
 
-    void addUnaryScore(int child, double delta) {
+    inline void addUnaryScore(int child, double delta) {
         unary_[child] += delta;
     }
 

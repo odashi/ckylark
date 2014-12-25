@@ -15,22 +15,25 @@ class M1Lexicon {
     M1Lexicon & operator=(const M1Lexicon &) = delete;
 
 public:
-    M1Lexicon(const Dictionary & word_table, const TagSet & tag_set)
-        : score_(
-            tag_set.numTags(), std::vector<double>(
-                word_table.size(), 0.0)) {}
+    M1Lexicon(const Dictionary & word_table, const TagSet & tag_set);
     ~M1Lexicon() {}
 
-    double getScore(int tag_id, int word_id) const {
+    inline double getScore(int tag_id, int word_id) const {
         return score_[tag_id][word_id];
     }
     
-    void addScore(int tag_id, int word_id, double delta) {
+    inline void addScore(int tag_id, int word_id, double delta) {
         score_[tag_id][word_id] += delta;
     }
 
+    double getScalingFactor(int word_id) const;
+
+    const TagSet & getTagSet() const { return tag_set_; }
+
 private:
+    const TagSet & tag_set_;
     std::vector<std::vector<double> > score_;
+    mutable std::vector<double> scaling_;
 
 }; // class M1Lexicon
 

@@ -12,6 +12,7 @@ libckylark_la_SOURCES = \
 	LAPCFGParser.cc \
 	Lattice.cc \
 	Lexicon.cc \
+	M1Lexicon.cc \
 	M1ModelProjector.cc \
 	Mapping.cc \
 	MaxScalingFactor.cc \

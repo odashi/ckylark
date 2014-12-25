@@ -147,6 +147,9 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
     vector<int> tid_list = makeTagIdList(sentence);
 
     CKYTable<bool> allowed_tag(num_words, num_tags);
+
+    doM1Preparse(allowed_tag, wid_list, tid_list, setting.partial);
+
     CKYTable<vector<bool> > allowed_sub(num_words, num_tags);
     CKYTable<vector<double> > inside(num_words, num_tags);
     CKYTable<vector<double> > outside(num_words, num_tags);
@@ -576,6 +579,154 @@ vector<int> LAPCFGParser::makeTagIdList(const vector<string> & sentence) const {
     return tid_list;
 }
 
+void LAPCFGParser::doM1Preparse(
+    CKYTable<bool> & allowed_tag,
+    const std::vector<int> & wid_list,
+    const std::vector<int> & tid_list,
+    bool partial) const {
+
+    const int num_words = wid_list.size();
+    const int num_tags = tag_set_->numTags();
+    const int root_tag = tag_set_->getTagId("ROOT");
+    const Lexicon & g0_lexicon = getLexicon(0);
+    CKYTable<double> inside(num_words, num_tags);
+    CKYTable<double> outside(num_words, num_tags);
+    M1OOVLexiconSmoother smoother(*m1_lexicon_, *word_table_, smooth_unklex_);
+    const double binary_scaling = 1.0 / m1_grammar_->getBinaryScore(root_tag, root_tag);
+
+    // initialize
+
+    for (int begin = 0; begin < num_words; ++begin) {
+        for (int end = begin + 1; end <= num_words; ++end) {
+            for (int tag = 0; tag < num_tags; ++tag) {
+                inside.at(begin, end, tag) = 0.0;
+                outside.at(begin, end, tag) = 0.0;
+            }
+        }
+    }
+
+    // set terminal scores
+
+    for (int begin = 0; begin < num_words; ++begin) {
+        int end = begin + 1;
+        int wid = wid_list[begin];
+        int tid = tid_list[begin];
+
+        if (partial && tid != -1) {
+            // abstract tag
+            inside.at(begin, end, root_tag) = 1.0;
+        } else {
+            // lexicon
+            double word_scaling = m1_lexicon_->getScalingFactor(wid);
+
+            for (int tag = 0; tag < num_tags; ++tag) {
+                inside.at(begin, end, tag) = word_scaling * smoother.getScore(tag, wid);
+            }
+        }
+    }
+
+    // calculate inside scores
+
+    for (int len = 1; len <= num_words; ++len) {
+        for (int begin = 0; begin < num_words - len + 1; ++begin) {
+            int end = begin + len;
+
+            // binary
+            if (len > 1) {
+                double sum = 0.0;
+
+                for (int ltag = 0; ltag < num_tags; ++ltag) {
+                    if (ltag != root_tag && !g0_lexicon.hasEntry(ltag)) continue;
+
+                    for (int rtag = 0; rtag < num_tags; ++rtag) {
+                        if (rtag != root_tag && !g0_lexicon.hasEntry(rtag)) continue;
+                        double rule_score = binary_scaling * m1_grammar_->getBinaryScore(ltag, rtag);
+
+                        for (int mid = begin + 1; mid < end; ++mid) {
+                            double left_score = inside.at(begin, mid, ltag);
+                            double right_score = inside.at(mid, end, rtag);
+                            sum += rule_score * left_score * right_score;
+                        }
+                    }
+                }
+
+                inside.at(begin, end, root_tag) = sum;
+            }
+
+            // unary
+            for (int ctag = 0; ctag < num_tags; ++ctag) {
+                if (!g0_lexicon.hasEntry(ctag)) continue; // skip ROOT too
+                inside.at(begin, end, root_tag) +=
+                    m1_grammar_->getUnaryScore(ctag) *
+                    inside.at(begin, end, ctag);
+            }
+        }
+    }
+
+    // calculate outside scores
+
+    outside.at(0, num_words, root_tag) = 1.0;
+
+    for (int len = num_words; len >= 1; --len) {
+        for (int begin = 0; begin < num_words - len + 1; ++begin) {
+            int end = begin + len;
+
+            // unary
+            for (int ctag = 0; ctag < num_tags; ++ctag) {
+                if (!g0_lexicon.hasEntry(ctag)) continue; // skip ROOT too
+                outside.at(begin, end, ctag) +=
+                    m1_grammar_->getUnaryScore(ctag) *
+                    outside.at(begin, end, root_tag);
+            }
+
+            // binary
+            if (len > 1) {
+                double parent_score = binary_scaling * outside.at(begin, end, root_tag);
+
+                for (int ltag = 0; ltag < num_tags; ++ltag) {
+                    if (ltag != root_tag && !g0_lexicon.hasEntry(ltag)) continue;
+
+                    for (int rtag = 0; rtag < num_tags; ++rtag) {
+                        if (rtag != root_tag && !g0_lexicon.hasEntry(rtag)) continue;
+                        double rule_score = parent_score * m1_grammar_->getBinaryScore(ltag, rtag);
+
+                        for (int mid = begin + 1; mid < end; ++mid) {
+                            double left_score = inside.at(begin, mid, ltag);
+                            double right_score = inside.at(mid, end, rtag);
+                            outside.at(begin, mid, ltag) += rule_score * right_score;
+                            outside.at(mid, end, rtag) += rule_score * left_score;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    // prune
+
+    const double thr = 1e+3 * prune_threshold_ * inside.at(0, num_words, root_tag);
+
+    for (int len = num_words; len >= 1; --len) {
+        for (int begin = 0; begin < num_words - len + 1; ++begin) {
+            int end = begin + len;
+            bool root_ok =
+                (inside.at(begin, end, root_tag) * outside.at(begin, end, root_tag) >= thr);
+
+            for (int tag = 0; tag < num_tags; ++tag) {
+                if (!g0_lexicon.hasEntry(tag)) {
+                    allowed_tag.at(begin, end, tag) = root_ok;
+                } else {
+                    allowed_tag.at(begin, end, tag) =
+                        (inside.at(begin, end, tag) * outside.at(begin, end, tag) >= thr);
+                }
+
+                //cout << begin << ' ' << end << ' ' << tag_set_->getTagName(tag)
+                //    << ' ' << allowed_tag.at(begin, end, tag) << endl;
+            }
+        }
+    }
+}
+
 void LAPCFGParser::initializeCharts(
     CKYTable<bool> & allowed_tag,
     CKYTable<vector<bool> > & allowed_sub,
@@ -622,8 +773,10 @@ void LAPCFGParser::initializeCharts(
                     // only 1 subtag is possible for the first time
                     inside.at(begin, end, tag).assign(1, 0.0);
                     outside.at(begin, end, tag).assign(1, 0.0);
-                    allowed_tag.at(begin, end, tag) = true;
-                    allowed_sub.at(begin, end, tag).assign(1, true);
+                    
+                    // already set at doM1Preparse()
+                    // allowed_tag.at(begin, end, tag) = true;
+                    allowed_sub.at(begin, end, tag).assign(1, allowed_tag.at(begin, end, tag));
                 }
             }
         }

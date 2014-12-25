@@ -8,7 +8,10 @@ using namespace std;
 
 namespace Ckylark {
 
-OOVLexiconSmoother::OOVLexiconSmoother(const Lexicon & lexicon, const Dictionary & word_table, double ratio)
+OOVLexiconSmoother::OOVLexiconSmoother(
+    const Lexicon & lexicon,
+    const Dictionary & word_table,
+    double ratio)
     : LexiconSmoother(lexicon)
     , ratio_(ratio)
     , cur_ent_(nullptr)
@@ -62,6 +65,43 @@ double OOVLexiconSmoother::getScore(int subtag_id) const {
     return
         (1.0 - ratio_) * (cur_ent_ ? cur_ent_->getScore(subtag_id) : 0.0) +
         ratio_ * oov_entries_[cur_tag_]->getScore(subtag_id);
+}
+
+M1OOVLexiconSmoother::M1OOVLexiconSmoother(
+    const M1Lexicon & lexicon,
+    const Dictionary & word_table,
+    double ratio)
+    : M1LexiconSmoother(lexicon)
+    , ratio_(ratio) {
+
+    if (ratio < 0.0 || ratio > 1.0) {
+        throw runtime_error("M1OOVLexiconSmoother::M1OOVLexiconSmoother(): invalid value: ratio");
+    }
+
+    const TagSet & tag_set = lexicon.getTagSet();
+    int num_tags = tag_set.numTags();
+
+    // generate OOV lexicon scores
+    oov_scores_.assign(num_tags, 0.0);
+
+    // sum all UNK* lexicon probabilities
+    for (const string & word : word_table.getWordList()) {
+        if (StringUtil::startsWith(word, "UNK")) {
+            int wid = word_table.getId(word);
+
+            for (int tag = 0; tag < num_tags; ++tag) {
+                oov_scores_[tag] += lexicon.getScore(tag, wid);
+            }
+        }
+    }
+}
+
+M1OOVLexiconSmoother::~M1OOVLexiconSmoother() {}
+
+double M1OOVLexiconSmoother::getScore(int tag_id, int word_id) {
+    return
+        (1.0 - ratio_) * (getLexicon().getScore(tag_id, word_id)) +
+        ratio_ * oov_scores_[tag_id];
 }
 
 } // namespace Ckylark

@@ -85,6 +85,12 @@ private:
 
     std::vector<int> makeTagIdList(const std::vector<std::string> & sentence) const;
 
+    void doM1Preparse(
+        CKYTable<bool> & allowed_tag,
+        const std::vector<int> & wid_list,
+        const std::vector<int> & tid_list,
+        bool partial) const;
+
     void initializeCharts(
         CKYTable<bool> & allowed_tag,
         CKYTable<std::vector<bool> > & allowed_sub,
