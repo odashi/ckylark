@@ -704,7 +704,7 @@ void LAPCFGParser::doM1Preparse(
 
     // prune
 
-    const double thr = 1e+3 * prune_threshold_ * inside.at(0, num_words, root_tag);
+    const double thr = prune_threshold_ * inside.at(0, num_words, root_tag);
 
     for (int len = num_words; len >= 1; --len) {
         for (int begin = 0; begin < num_words - len + 1; ++begin) {
@@ -1092,7 +1092,7 @@ void LAPCFGParser::calculateOutsideScores(
 
                     for (int psub = 0; psub < num_psub; ++psub) {
                         if (!allowed_sub.at(begin, end, ptag)[psub]) continue;
-                        double parent_score = outside.at(begin, end, ptag)[psub];
+                        double parent_score = scaling_factor_ * outside.at(begin, end, ptag)[psub];
                         if (parent_score == 0.0) continue;
 
                         for (const BinaryRule * rule : binary_rules_p) {
@@ -1142,7 +1142,7 @@ void LAPCFGParser::calculateOutsideScores(
                                         double right_score = inside_rsubs[rsub];
                                         if (right_score == 0.0) continue;
 
-                                        double common = scaling_factor_ * rule_score * parent_score;
+                                        double common = rule_score * parent_score;
                                         outside_lsubs[lsub] += common * right_score;
                                         outside_rsubs[rsub] += common * left_score;
                                     }
