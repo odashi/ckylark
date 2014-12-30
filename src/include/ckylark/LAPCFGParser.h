@@ -53,6 +53,9 @@ public:
     double getUNKLexiconSmoothing() const { return smooth_unklex_; }
     void setUNKLexiconSmoothing(double value);
 
+    bool getDoM1Preparse() const { return do_m1_preparse_; }
+    void setDoM1Preparse(bool value) { do_m1_preparse_ = value; }
+
 private:
     std::shared_ptr<Dictionary> word_table_;
     std::shared_ptr<TagSet> tag_set_;
@@ -65,6 +68,7 @@ private:
     int fine_level_;
     double prune_threshold_;
     double smooth_unklex_;
+    bool do_m1_preparse_;
 
     double scaling_factor_;
 

@@ -30,6 +30,7 @@ LAPCFGParser::LAPCFGParser()
     : fine_level_(-1)
     , prune_threshold_(1e-5)
     , smooth_unklex_(0)
+    , do_m1_preparse_(false)
     , scaling_factor_(1.0) {
 }
 
@@ -148,7 +149,9 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
 
     CKYTable<bool> allowed_tag(num_words, num_tags);
 
-    doM1Preparse(allowed_tag, wid_list, tid_list, setting.partial);
+    if (do_m1_preparse_) {
+        doM1Preparse(allowed_tag, wid_list, tid_list, setting.partial);
+    }
 
     CKYTable<vector<bool> > allowed_sub(num_words, num_tags);
     CKYTable<vector<double> > inside(num_words, num_tags);
@@ -774,9 +777,13 @@ void LAPCFGParser::initializeCharts(
                     inside.at(begin, end, tag).assign(1, 0.0);
                     outside.at(begin, end, tag).assign(1, 0.0);
                     
-                    // already set at doM1Preparse()
-                    // allowed_tag.at(begin, end, tag) = true;
-                    allowed_sub.at(begin, end, tag).assign(1, allowed_tag.at(begin, end, tag));
+                    if (do_m1_preparse_) {
+                        // already set at doM1Preparse()
+                        allowed_sub.at(begin, end, tag).assign(1, allowed_tag.at(begin, end, tag));
+                    } else {
+                        allowed_tag.at(begin, end, tag) = true;
+                        allowed_sub.at(begin, end, tag).assign(1, true);
+                    }
                 }
             }
         }

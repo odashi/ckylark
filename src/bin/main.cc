@@ -41,6 +41,7 @@ unique_ptr<ArgumentParser> parseArgs(int argc, char * argv[]) {
     ap->addRealArgument("prune-threshold", 1e-5, "coarse-to-fine pruning threshold", false);
     ap->addRealArgument("smooth-unklex", 1e-10, "smoothing strength using UNK lexicon", false);
     ap->addSwitchArgument("partial", "parse partial (grammar tag contained) sentence");
+    ap->addSwitchArgument("do-m1-preparse", "do preparsing using G-1 grammar/lexicon");
 
     // output format
     ap->addStringArgument("output-format", "sexpr", "output format ('sexpr', 'postag')", false);
