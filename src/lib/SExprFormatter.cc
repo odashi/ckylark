@@ -17,7 +17,11 @@ string SExprFormatter::generate(const Tree<string> & parse) const {
     string tag = escape(parse.value());
 
     if (parse.isLeaf()) {
-        return tag.empty() ? "()" : tag;
+        if (tag.empty()) {
+            return parse.isRoot() ? "(())" : "()";
+        } else {
+            return tag;
+        }
     } else {
         int nc = parse.numChildren();
         string child = "";
