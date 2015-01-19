@@ -66,7 +66,11 @@ shared_ptr<Lexicon> Lexicon::loadFromStream(
         vector<string> ls;
         boost::split(ls, ss, boost::is_any_of(", "), boost::token_compress_on);
         vector<double> score(ls.size());
-        transform(ls.begin(), ls.end(), score.begin(), [](const string & x){ return stod(x); });
+
+        transform(ls.begin(), ls.end(), score.begin(), [](const string & x) {
+            try { return stod(x); }
+            catch (...) { return 0.0; }
+        });
         
         LexiconEntry & ent = lex->getEntryOrCreate(tid, wid);
         if (score.size() != ent.numSubtags()) {
