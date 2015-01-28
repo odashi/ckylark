@@ -28,6 +28,7 @@ shared_ptr<Parser> ParserFactory::createLAPCFGParser(const ArgumentParser & args
     parser->setPruningThreshold(args.getReal("prune-threshold"));
     parser->setUNKLexiconSmoothing(args.getReal("smooth-unklex"));
     parser->setDoM1Preparse(args.getSwitch("do-m1-preparse"));
+    parser->setForceGenerate(args.getSwitch("force-generate"));
 
     Tracer::println(1, (boost::format("fine-level: %d (requested: %d)") % parser->getFineLevel() % args.getInteger("fine-level")).str());
     Tracer::println(1, (boost::format("prune-threshold: %.3e") % parser->getPruningThreshold()).str());

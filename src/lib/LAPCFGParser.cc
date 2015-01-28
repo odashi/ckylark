@@ -31,6 +31,7 @@ LAPCFGParser::LAPCFGParser()
     , prune_threshold_(1e-5)
     , smooth_unklex_(0)
     , do_m1_preparse_(false)
+    , force_generate_(false)
     , scaling_factor_(1.0) {
 }
 
@@ -141,7 +142,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
 
     // check empty sentence
     if (num_words == 0) {
-        return ParserResult { getDefaultParse(), true, -1 };
+        return ParserResult { getDefaultParse(sentence), true, -1 };
     }
 
     vector<int> wid_list = makeWordIdList(sentence);
@@ -176,7 +177,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
         double sentence_score = inside.at(0, num_words, root_tag)[0];
         if (sentence_score == 0.0) {
             Tracer::println(1, (boost::format("  No any possible parses (level=%d).") % level).str());
-            return ParserResult { getDefaultParse(), false, level };
+            return ParserResult { getDefaultParse(sentence), false, level };
         }
         //cout << "  check" << endl;
 
@@ -506,7 +507,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
         return ParserResult { shared_ptr<Tree<string> >(parse), true, final_level_to_try };
     } else {
         Tracer::println(1, "  No any possible max-rule parse.");
-        return ParserResult { getDefaultParse(), false, final_level_to_try };
+        return ParserResult { getDefaultParse(sentence), false, final_level_to_try };
     }
 }
 
@@ -531,8 +532,28 @@ void LAPCFGParser::setUNKLexiconSmoothing(double value) {
     smooth_unklex_ = value;
 }
 
-shared_ptr<Tree<string> > LAPCFGParser::getDefaultParse() const {
-    return shared_ptr<Tree<string> >(new Tree<string>(""));
+shared_ptr<Tree<string> > LAPCFGParser::getDefaultParse(const vector<string> & sentence) const {
+    if (force_generate_) {
+        Tree<string> * root_node = new Tree<string>("ROOT");
+        Tree<string> * fail_node = new Tree<string>("?");
+        root_node->addChild(fail_node);
+        if (sentence.size() > 0) {
+            for (auto & w : sentence) {
+                Tree<string> * lex_node = new Tree<string>("?");
+                Tree<string> * word_node = new Tree<string>(w);
+                fail_node->addChild(lex_node);
+                lex_node->addChild(word_node);
+            }
+        } else {
+            Tree<string> * lex_node = new Tree<string>("?");
+            Tree<string> * word_node = new Tree<string>("-EMPTY-");
+            fail_node->addChild(lex_node);
+            lex_node->addChild(word_node);
+        }
+        return shared_ptr<Tree<string> >(root_node);
+    } else {
+        return shared_ptr<Tree<string> >(new Tree<string>(""));
+    }
 }
 
 vector<int> LAPCFGParser::makeWordIdList(const vector<string> & sentence) const {

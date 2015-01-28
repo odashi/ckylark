@@ -56,6 +56,9 @@ public:
     bool getDoM1Preparse() const { return do_m1_preparse_; }
     void setDoM1Preparse(bool value) { do_m1_preparse_ = value; }
 
+    bool getForceGenerate() const { return force_generate_; }
+    void setForceGenerate(bool value) { force_generate_ = value; }
+
 private:
     std::shared_ptr<Dictionary> word_table_;
     std::shared_ptr<TagSet> tag_set_;
@@ -69,7 +72,7 @@ private:
     double prune_threshold_;
     double smooth_unklex_;
     bool do_m1_preparse_;
-
+    bool force_generate_;
     double scaling_factor_;
 
     ParserResult generateMaxRuleOneBestParse(
@@ -83,7 +86,7 @@ private:
     void loadGrammar(const std::string & path);
     void generateCoarseModels();
     
-    std::shared_ptr<Tree<std::string> > getDefaultParse() const;
+    std::shared_ptr<Tree<std::string> > getDefaultParse(const std::vector<std::string> & sentence) const;
 
     std::vector<int> makeWordIdList(const std::vector<std::string> & sentence) const;
 
