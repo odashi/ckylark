@@ -2,8 +2,10 @@
 #define CKYLARK_PARSER_FACTORY_H_
 
 #include <ckylark/Parser.h>
-#include <ckylark/ArgumentParser.h>
 
+#include <boost/any.hpp>
+
+#include <map>
 #include <memory>
 
 namespace Ckylark {
@@ -15,10 +17,7 @@ class ParserFactory {
     ParserFactory & operator=(const ParserFactory &) = delete;
 
 public:
-    static std::shared_ptr<Parser> create(const ArgumentParser & args);
-
-private:
-    static std::shared_ptr<Parser> createLAPCFGParser(const ArgumentParser & args);
+    static std::shared_ptr<Parser> create(const std::map<std::string, boost::any> & args);
 
 }; // class ParserFactory
 

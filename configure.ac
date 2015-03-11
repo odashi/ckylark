@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT([ckylark], [0.3.0], [yus.takara@gmail.com])
+AC_INIT([ckylark], [0.4.0], [yus.takara@gmail.com])
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/bin/main.cc])
 AC_CONFIG_HEADERS([config.h])
@@ -41,7 +41,8 @@ AC_CONFIG_FILES([Makefile
 
 AC_CONFIG_MACRO_DIR([m4])
 
-BOOST_REQUIRE()
-BOOST_IOSTREAMS
+AX_BOOST_BASE([1.49], , AC_MSG_ERROR([Boost 1.49 or later is required]))
+AX_BOOST_IOSTREAMS
+AX_BOOST_PROGRAM_OPTIONS
 
 AC_OUTPUT

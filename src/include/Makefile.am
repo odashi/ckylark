@@ -1,5 +1,4 @@
 nobase_include_HEADERS = \
-	ckylark/ArgumentParser.h \
 	ckylark/BerkeleySignatureEstimator.h \
 	ckylark/CKYTable.h \
 	ckylark/CharUtil.h \

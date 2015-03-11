@@ -3,7 +3,6 @@ lib_LTLIBRARIES = libckylark.la
 AM_CXXFLAGS = -I$(srcdir)/../include $(BOOST_CPPFLAGS)
 
 libckylark_la_SOURCES = \
-	ArgumentParser.cc \
 	BerkeleySignatureEstimator.cc \
 	Dictionary.cc \
 	FormatterFactory.cc \
@@ -29,5 +28,5 @@ libckylark_la_SOURCES = \
 	Timer.cc \
 	Tracer.cc
 
-libckylark_la_LIBADD = $(BOOST_IOSTREAMS_LIBADD)
-libckylark_la_LDFLAGS = -version-info 0:0:0 $(BOOST_IOSTREAMS_LDFLAGS)
+libckylark_la_LDFLAGS = -version-info 0:4:0 $(BOOST_IOSTREAMS_LIB)
+
