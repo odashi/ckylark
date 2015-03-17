@@ -1,6 +1,6 @@
 lib_LTLIBRARIES = libckylark.la
 
-AM_CXXFLAGS = -I$(srcdir)/../include $(BOOST_CPPFLAGS)
+AM_CXXFLAGS = -I$(srcdir)/../include $(BOOST_CPPFLAGS) -DPKGDATADIR='"$(pkgdatadir)"'
 
 libckylark_la_SOURCES = \
 	BerkeleySignatureEstimator.cc \

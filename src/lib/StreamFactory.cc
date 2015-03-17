@@ -36,6 +36,23 @@ shared_ptr<InputStream> StreamFactory::createInputStream(const string & path) {
     } catch (exception & ex) {
     }
 
+    // try loading basic text stream from shared directory
+    string path2 = string(PKGDATADIR) + "/" + path;
+    try {
+        InputStream * stream = new TextInputStream(path2);
+        Tracer::println(1, "input path: " + path2 + " (mode=text)");
+        return shared_ptr<InputStream>(stream);
+    } catch (...) {
+    }
+
+    // try loading gzip stream from shared directory
+    string path2_gz = path2 + ".gz";
+    try {
+        InputStream * stream = new GZipInputStream(path2_gz);
+        Tracer::println(1, "input path: " + path2_gz + " (mode=gzip)");
+        return shared_ptr<InputStream>(stream);
+    } catch (exception & ex) {
+    }
     // all cases are failed
     throw runtime_error("StreamFactory::createInputStream: cannot open file: " + path);
 }
