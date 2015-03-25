@@ -38,6 +38,7 @@ You simply run below:
     autoreconf -i
     ./configure
     make
+    (sudo) make install
 
 
 Usage
@@ -55,7 +56,7 @@ sentences, use `model/jdc` instead)
 
 For example,
 
-    $ echo "This is a pen ." | src/bin/ckylark --model model/wsj
+    $ echo "This is a pen ." | ckylark --model wsj
     ( (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN pen))) (. .)) )
 
 `Ckylark` uses the text dump files of original `Berkeley Parser`
