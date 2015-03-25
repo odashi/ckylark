@@ -86,7 +86,7 @@ PO::variables_map parseOptions(int argc, char * argv[]) {
         exit(1);
     }
 
-    return move(args);
+    return std::move(args);
 }
 
 int main(int argc, char * argv[]) {
