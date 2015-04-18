@@ -28,5 +28,5 @@ libckylark_la_SOURCES = \
 	Timer.cc \
 	Tracer.cc
 
-libckylark_la_LDFLAGS = -version-info 0:4:0 $(BOOST_IOSTREAMS_LIB)
+libckylark_la_LDFLAGS = -version-info 0:4:0 $(BOOST_LDFLAGS) $(BOOST_IOSTREAMS_LIB)
 
