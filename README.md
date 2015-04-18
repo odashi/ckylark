@@ -21,6 +21,11 @@ below approaches:
   smoothing.
 * Rollbacking coarse grammar if parsing failed.
 
+If you want to read more, or cite Ckylark when you use it in a paper,
+please reference the following paper:
+
+* Yusuke Oda, Graham Neubig, Sakriani Sakti, Tomoki Toda, Satoshi Nakamura. Ckylark: A More Robust PCFG-LA Parser. Proceedings of NAACL: Demo Track. 2015.
+
 `Ckylark` is a portmanteau of both "CKY" and "skylark."
 
 
