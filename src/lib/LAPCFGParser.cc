@@ -864,7 +864,7 @@ void LAPCFGParser::setTerminalScores(
                     if (!allowed_sub.at(begin, end, tag)[sub]) continue;
                     inside.at(begin, end, tag)[sub] = word_scaling * smoother.getScore(sub);
                 
-                    //cerr << begin << "(" << sentence[begin] << ")->"
+                    //cerr << begin << "(" << wid_list[begin] << ")->"
                     //    << tag_set_->getTagName(tag) << "[" << sub << "] = "
                     //    << inside.at(begin, end, tag)[sub] << endl;
                 }
