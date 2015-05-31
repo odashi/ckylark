@@ -9,14 +9,6 @@ using namespace std;
 
 namespace Ckylark {
 
-double LexiconEntry::getMaxScore() const {
-    double ret = 0.0;
-    for (double x : score_) {
-        if (x > ret) ret = x;
-    }
-    return ret;
-}
-
 Lexicon::Lexicon(const TagSet & tag_set, int level)
     : tag_set_(tag_set)
     , level_(level)
@@ -100,27 +92,6 @@ LexiconEntry & Lexicon::getEntryOrCreate(int tag_id, int word_id) {
     LexiconEntry * ent = new LexiconEntry(tag_id, word_id, tag_set_.numSubtags(tag_id, level_));
     entry_[tag_id].insert(make_pair(word_id, ent));
     return *ent;
-}
-
-double Lexicon::getScalingFactor(int word_id) const {
-    if (scaling_.empty()) {
-        // calculate scaling factors
-        for (auto & entry_tag : entry_) {
-            for (auto & keyval : entry_tag) {
-                double max_score = keyval.second->getMaxScore();
-                if (max_score > scaling_[keyval.first]) {
-                    scaling_[keyval.first] = max_score;
-                }
-            }
-        }
-    }
-
-    auto ent = scaling_.find(word_id);
-    if (ent != scaling_.end()) {
-        if (ent->second > 0.0) return 1.0 / ent->second;
-        else return 1.0;
-    }
-    return 1.0;
 }
 
 } // namespace Ckylark

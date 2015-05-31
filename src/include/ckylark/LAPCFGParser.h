@@ -11,6 +11,7 @@
 #include <ckylark/M1Lexicon.h>
 #include <ckylark/M1Grammar.h>
 #include <ckylark/Tree.h>
+#include <ckylark/ScalingFactor.h>
 #include <ckylark/SignatureEstimator.h>
 
 #include <memory>
@@ -43,6 +44,7 @@ public:
     const TagSet & getTagSet() const { return *tag_set_; }
     const Lexicon & getLexicon(int level) const { return *(lexicon_[level]); }
     const Grammar & getGrammar(int level) const { return *(grammar_[level]); }
+    const ScalingFactor & getScalingFactor(int level) const { return *(scaling_factor_[level]); }
 
     int getFineLevel() const { return fine_level_; }
     void setFineLevel(int value);
@@ -64,6 +66,7 @@ private:
     std::shared_ptr<TagSet> tag_set_;
     std::vector<std::shared_ptr<Lexicon> > lexicon_;
     std::vector<std::shared_ptr<Grammar> > grammar_;
+    std::vector<std::shared_ptr<ScalingFactor> > scaling_factor_;
     std::shared_ptr<M1Lexicon> m1_lexicon_;
     std::shared_ptr<M1Grammar> m1_grammar_;
     std::shared_ptr<SignatureEstimator> sig_est_;
@@ -73,7 +76,6 @@ private:
     double smooth_unklex_;
     bool do_m1_preparse_;
     bool force_generate_;
-    double scaling_factor_;
 
     ParserResult generateMaxRuleOneBestParse(
         const std::vector<std::string> & sentence,
@@ -85,6 +87,7 @@ private:
     void loadLexicon(const std::string & path);
     void loadGrammar(const std::string & path);
     void generateCoarseModels();
+    void generateScalingFactors();
     
     std::shared_ptr<Tree<std::string> > getDefaultParse(const std::vector<std::string> & sentence) const;
 

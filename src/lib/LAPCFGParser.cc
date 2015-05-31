@@ -31,8 +31,7 @@ LAPCFGParser::LAPCFGParser()
     , prune_threshold_(1e-5)
     , smooth_unklex_(0)
     , do_m1_preparse_(false)
-    , force_generate_(false)
-    , scaling_factor_(1.0) {
+    , force_generate_(false) {
 }
 
 LAPCFGParser::~LAPCFGParser() {}
@@ -45,18 +44,12 @@ shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(const string & path)
     parser->loadLexicon(path + ".lexicon");
     parser->loadGrammar(path + ".grammar");
     parser->generateCoarseModels();
+    parser->generateScalingFactors();
     parser->setFineLevel(-1);
 
     parser->sig_est_.reset(new BerkeleySignatureEstimator(
         BerkeleySignatureEstimator::English,
         *parser->word_table_));
-
-    int finest_level = parser->tag_set_->getDepth() - 1;
-    auto & finest_lexicon = parser->getLexicon(finest_level);
-    auto & finest_grammar = parser->getGrammar(finest_level);
-    parser->scaling_factor_ = MaxScalingFactor().calculate(finest_lexicon, finest_grammar);
-
-    Tracer::println(1, (boost::format("Scaling Factor: %.6e") % parser->scaling_factor_).str());
 
     return parser;
 }
@@ -115,6 +108,18 @@ void LAPCFGParser::generateCoarseModels() {
     M1ModelProjector m1_projector(*word_table_, *tag_set_, *(lexicon_[0]), *(grammar_[0]));
     m1_lexicon_ = m1_projector.generateLexicon();
     m1_grammar_ = m1_projector.generateGrammar();
+}
+
+void LAPCFGParser::generateScalingFactors() {
+    const int depth = tag_set_->getDepth();
+
+    for (int level = 0; level < depth; ++level) {
+        Tracer::println(1, (boost::format("Generating scaling factors (level=%d) ...") % level).str());
+
+        std::shared_ptr<ScalingFactor> sf(new MaxScalingFactor(*word_table_, *tag_set_, *(lexicon_[level]), *(grammar_[level])));
+        scaling_factor_.push_back(sf);
+        Tracer::println(1, (boost::format("  Grammar: %e") % sf->getGrammarScalingFactor()).str());
+    }
 }
 
 ParserResult LAPCFGParser::parse(
@@ -200,6 +205,8 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
     const double NEG_INFTY = -1e20;
     const Lexicon & fine_lexicon = getLexicon(final_level_to_try);
     const Grammar & fine_grammar = getGrammar(final_level_to_try);
+    const ScalingFactor & fine_sf = getScalingFactor(final_level_to_try);
+
     OOVLexiconSmoother smoother(fine_lexicon, *word_table_, smooth_unklex_);
 
     for (int len = 1; len <= num_words; ++len) {
@@ -296,7 +303,7 @@ ParserResult LAPCFGParser::generateMaxRuleOneBestParse(
             } else {
                 int wid = wid_list[begin];
                 int tid = tid_list[begin];
-                double word_scaling = fine_lexicon.getScalingFactor(wid);
+                double word_scaling = fine_sf.getLexiconScalingFactor(wid);
 
                 if (setting.partial && tid != -1) {
 
@@ -831,6 +838,7 @@ void LAPCFGParser::setTerminalScores(
     const int num_words = allowed_tag.numWords();
     const int num_tags = allowed_tag.numTags();
     const Lexicon & cur_lexicon = getLexicon(cur_level);
+    const ScalingFactor & cur_sf = getScalingFactor(cur_level);
     OOVLexiconSmoother smoother(cur_lexicon, *word_table_, smooth_unklex_);
 
     for (int begin = 0; begin < num_words; ++begin) {
@@ -853,7 +861,7 @@ void LAPCFGParser::setTerminalScores(
         } else {
             
             // process lexicon
-            double word_scaling = cur_lexicon.getScalingFactor(wid);
+            double word_scaling = cur_sf.getLexiconScalingFactor(wid);
 
             for (int tag = 0; tag < num_tags; ++tag) {
                 if (!allowed_tag.at(begin, end, tag)) continue;
@@ -884,6 +892,7 @@ void LAPCFGParser::calculateInsideScores(
     const int num_tags = allowed_tag.numTags();
     const Lexicon & cur_lexicon = getLexicon(cur_level);
     const Grammar & cur_grammar = getGrammar(cur_level);
+    const double sf = getScalingFactor(cur_level).getGrammarScalingFactor();
 
     for (int len = 1; len <= num_words; ++len) {
         for (int begin = 0; begin < num_words - len + 1; ++begin) {
@@ -948,7 +957,7 @@ void LAPCFGParser::calculateInsideScores(
                                         double right_score = inside_rsubs[rsub];
                                         if (right_score == 0.0) continue;
                             
-                                        sum += scaling_factor_ * rule_score * left_score * right_score;
+                                        sum += sf * rule_score * left_score * right_score;
                                         changed = true;
                                     }
                                 }
@@ -1060,6 +1069,7 @@ void LAPCFGParser::calculateOutsideScores(
     const int root_tag = tag_set_->getTagId("ROOT");
     const Lexicon & cur_lexicon = getLexicon(cur_level);
     const Grammar & cur_grammar = getGrammar(cur_level);
+    const double sf = getScalingFactor(cur_level).getGrammarScalingFactor();
 
     outside.at(0, num_words, root_tag)[0] = 1.0;
 
@@ -1120,7 +1130,7 @@ void LAPCFGParser::calculateOutsideScores(
 
                     for (int psub = 0; psub < num_psub; ++psub) {
                         if (!allowed_sub.at(begin, end, ptag)[psub]) continue;
-                        double parent_score = scaling_factor_ * outside.at(begin, end, ptag)[psub];
+                        double parent_score = sf * outside.at(begin, end, ptag)[psub];
                         if (parent_score == 0.0) continue;
 
                         for (const BinaryRule * rule : binary_rules_p) {

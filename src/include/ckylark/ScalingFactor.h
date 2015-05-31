@@ -1,9 +1,6 @@
 #ifndef CKYLARK_SCALING_FACTOR_H_
 #define CKYLARK_SCALING_FACTOR_H_
 
-#include <ckylark/Lexicon.h>
-#include <ckylark/Grammar.h>
-
 namespace Ckylark {
 
 class ScalingFactor {
@@ -15,7 +12,8 @@ public:
     ScalingFactor() {}
     virtual ~ScalingFactor() {}
 
-    virtual double calculate(const Lexicon & lexicon, const Grammar & grammar) = 0;
+    virtual double getLexiconScalingFactor(int word_id) const = 0;
+    virtual double getGrammarScalingFactor() const = 0;
 
 }; // class ScalingFactor
 
