@@ -17,7 +17,12 @@ class MaxScalingFactor : public ScalingFactor {
     MaxScalingFactor & operator=(const MaxScalingFactor &) = delete;
 
 public:
-    MaxScalingFactor(const Dictionary & word_table, const TagSet & tag_set, const Lexicon & lexicon, const Grammar & grammar);
+    MaxScalingFactor(
+        const Dictionary & word_table,
+        const TagSet & tag_set,
+        const Lexicon & lexicon,
+        const Grammar & grammar,
+        double lexicon_smoothing_factor);
     ~MaxScalingFactor() {}
 
     double getLexiconScalingFactor(int word_id) const { return lexicon_factor_.at(word_id); }

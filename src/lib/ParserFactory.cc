@@ -18,11 +18,12 @@ std::shared_ptr<Parser> ParserFactory::create(const map<string, any> & args) {
 
     if (method == "lapcfg") {
         Tracer::println(1, "Parsing method: LAPCFG");
-        std::shared_ptr<LAPCFGParser> parser = LAPCFGParser::loadFromBerkeleyDump(any_cast<string>(args.at("model")));
+        std::shared_ptr<LAPCFGParser> parser = LAPCFGParser::loadFromBerkeleyDump(
+            any_cast<string>(args.at("model")),
+            any_cast<double>(args.at("smooth-unklex")));
         int fine_level = any_cast<int>(args.at("fine-level"));
         parser->setFineLevel(fine_level);
         parser->setPruningThreshold(any_cast<double>(args.at("prune-threshold")));
-        parser->setUNKLexiconSmoothing(any_cast<double>(args.at("smooth-unklex")));
         parser->setDoM1Preparse(any_cast<bool>(args.at("do-m1-preparse")));
         parser->setForceGenerate(any_cast<bool>(args.at("force-generate")));
         Tracer::println(1, (format("fine-level: %d (requested: %d)") % parser->getFineLevel() % fine_level).str());

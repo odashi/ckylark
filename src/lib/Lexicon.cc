@@ -12,8 +12,7 @@ namespace Ckylark {
 Lexicon::Lexicon(const TagSet & tag_set, int level)
     : tag_set_(tag_set)
     , level_(level)
-    , entry_(tag_set.numTags())
-    , scaling_() {
+    , entry_(tag_set.numTags()) {
 }
 
 Lexicon::~Lexicon() {

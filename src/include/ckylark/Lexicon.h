@@ -70,7 +70,6 @@ private:
     const TagSet & tag_set_;
     int level_;
     std::vector<std::map<int, LexiconEntry *> > entry_; // [category]{word}
-    mutable std::map<int, double> scaling_;
 
 }; // class Lexicon
 

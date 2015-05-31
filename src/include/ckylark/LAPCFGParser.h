@@ -34,7 +34,9 @@ class LAPCFGParser : public Parser {
 public:
     virtual ~LAPCFGParser();
 
-    static std::shared_ptr<LAPCFGParser> loadFromBerkeleyDump(const std::string & path);
+    static std::shared_ptr<LAPCFGParser> loadFromBerkeleyDump(
+        const std::string & path,
+        double smooth_unklex);
 
     virtual ParserResult parse(
         const std::vector<std::string> & sentence,
@@ -53,7 +55,6 @@ public:
     void setPruningThreshold(double value);
 
     double getUNKLexiconSmoothing() const { return smooth_unklex_; }
-    void setUNKLexiconSmoothing(double value);
 
     bool getDoM1Preparse() const { return do_m1_preparse_; }
     void setDoM1Preparse(bool value) { do_m1_preparse_ = value; }
@@ -88,6 +89,8 @@ private:
     void loadGrammar(const std::string & path);
     void generateCoarseModels();
     void generateScalingFactors();
+    
+    void setUNKLexiconSmoothing(double value);
     
     std::shared_ptr<Tree<std::string> > getDefaultParse(const std::vector<std::string> & sentence) const;
 

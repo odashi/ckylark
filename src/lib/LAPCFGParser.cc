@@ -36,8 +36,12 @@ LAPCFGParser::LAPCFGParser()
 
 LAPCFGParser::~LAPCFGParser() {}
 
-shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(const string & path) {
+shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(
+    const string & path,
+    double smooth_unklex) {
+
     shared_ptr<LAPCFGParser> parser(new LAPCFGParser());
+    parser->setUNKLexiconSmoothing(smooth_unklex);
 
     parser->loadWordTable(path + ".words");
     parser->loadTagSet(path + ".splits");
@@ -116,7 +120,7 @@ void LAPCFGParser::generateScalingFactors() {
     for (int level = 0; level < depth; ++level) {
         Tracer::println(1, (boost::format("Generating scaling factors (level=%d) ...") % level).str());
 
-        std::shared_ptr<ScalingFactor> sf(new MaxScalingFactor(*word_table_, *tag_set_, *(lexicon_[level]), *(grammar_[level])));
+        std::shared_ptr<ScalingFactor> sf(new MaxScalingFactor(*word_table_, *tag_set_, *(lexicon_[level]), *(grammar_[level]), smooth_unklex_));
         scaling_factor_.push_back(sf);
         Tracer::println(1, (boost::format("  Grammar: %e") % sf->getGrammarScalingFactor()).str());
     }

@@ -1,5 +1,7 @@
 #include <ckylark/MaxScalingFactor.h>
 
+#include <ckylark/OOVLexiconSmoother.h>
+
 #include <cmath>
 #include <stdexcept>
 
@@ -11,11 +13,13 @@ MaxScalingFactor::MaxScalingFactor(
     const Dictionary & word_table,
     const TagSet & tag_set,
     const Lexicon & lexicon,
-    const Grammar & grammar)
+    const Grammar & grammar,
+    double lexicon_smoothing_factor)
     : lexicon_factor_(word_table.size(), 1.0) {
 
     // check lexicon/grammar levels
-    if (lexicon.getLevel() != grammar.getLevel()) {
+    int level = lexicon.getLevel();
+    if (level != grammar.getLevel()) {
         throw runtime_error("MaxScalingFactor::MaxScalingFactor(): lexicon and grammar levels are mismatched.");
     }
 
@@ -25,20 +29,23 @@ MaxScalingFactor::MaxScalingFactor(
     {
         // calculate lexicon scaling factors
         // factor(w) = 1.0 / (max_i P(X_i -> w))
+        OOVLexiconSmoother smoother(lexicon, word_table, lexicon_smoothing_factor);
+
         for (int w = 0; w < num_words; ++w) {
             double max_score = 0.0;
 
             for (int tag = 0; tag < num_tags; ++tag) {
-                auto * ent = lexicon.getEntry(tag, w);
-                if (!ent) continue;
+                if (!smoother.prepare(tag, w)) continue;
+                int num_sub = tag_set.numSubtags(tag, level);
 
-                for (size_t sub = 0; sub < ent->numSubtags(); ++sub) {
-                    double score = ent->getScore(sub);
+                for (int sub = 0; sub < num_sub; ++sub) {
+                    double score = smoother.getScore(sub);
                     if (score > max_score) {
                         max_score = score;
                     }
                 }
             }
+
             if (max_score > 0.0) {
                 lexicon_factor_[w] = 1.0 / max_score;
             }
