@@ -5,8 +5,10 @@ nobase_include_HEADERS = \
 	ckylark/Dictionary.h \
 	ckylark/Formatter.h \
 	ckylark/FormatterFactory.h \
+	ckylark/GeometricScalingFactor.h \
 	ckylark/Grammar.h \
 	ckylark/GZipStream.h \
+	ckylark/HarmonicScalingFactor.h \
 	ckylark/LAPCFGParser.h \
 	ckylark/Lattice.h \
 	ckylark/LatticeLoader.h \

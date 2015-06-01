@@ -6,8 +6,10 @@ libckylark_la_SOURCES = \
 	BerkeleySignatureEstimator.cc \
 	Dictionary.cc \
 	FormatterFactory.cc \
+	GeometricScalingFactor.cc \
 	Grammar.cc \
 	GZipStream.cc \
+	HarmonicScalingFactor.cc \
 	LAPCFGParser.cc \
 	Lattice.cc \
 	Lexicon.cc \

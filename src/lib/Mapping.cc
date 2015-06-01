@@ -15,8 +15,8 @@ Mapping::Mapping(const TagSet & tag_set, int coarse_level, int fine_level)
     , f2c_map_()
     , c2f_map_() {
 
-    if (coarse_level_ >= fine_level_) {
-        throw runtime_error("Mapping::Mapping(): not satisfied: coarse_level < fine_level");
+    if (coarse_level_ > fine_level_) {
+        throw runtime_error("Mapping::Mapping(): not satisfied: coarse_level <= fine_level");
     }
     if (coarse_level_ < 0) {
         throw runtime_error("Mapping::Mapping(): not satisfied: coarse_level >= 0");
