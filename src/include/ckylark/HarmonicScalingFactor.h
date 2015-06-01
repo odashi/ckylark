@@ -23,8 +23,10 @@ public:
         const Grammar & grammar,
         double lexicon_smoothing_factor);
     ~HarmonicScalingFactor() {}
-
-    double getLexiconScalingFactor(int word_id) const { return lexicon_factor_.at(word_id); }
+    
+    double getLexiconScalingFactor(int word_id) const {
+        return (word_id != -1) ? lexicon_factor_.at(word_id) : 1.0;
+    }
     double getGrammarScalingFactor() const { return grammar_factor_; }
 
 private:
