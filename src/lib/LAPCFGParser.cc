@@ -5,6 +5,8 @@
 #include <ckylark/M1ModelProjector.h>
 #include <ckylark/Tracer.h>
 #include <ckylark/BerkeleySignatureEstimator.h>
+#include <ckylark/MaxScalingFactor.h>
+#include <ckylark/GeometricScalingFactor.h>
 #include <ckylark/HarmonicScalingFactor.h>
 #include <ckylark/OOVLexiconSmoother.h>
 #include <ckylark/StreamFactory.h>
@@ -38,7 +40,8 @@ LAPCFGParser::~LAPCFGParser() {}
 
 shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(
     const string & path,
-    double smooth_unklex) {
+    double smooth_unklex,
+    const string & scaling) {
 
     shared_ptr<LAPCFGParser> parser(new LAPCFGParser());
     parser->setUNKLexiconSmoothing(smooth_unklex);
@@ -48,7 +51,7 @@ shared_ptr<LAPCFGParser> LAPCFGParser::loadFromBerkeleyDump(
     parser->loadLexicon(path + ".lexicon");
     parser->loadGrammar(path + ".grammar");
     parser->generateCoarseModels();
-    parser->generateScalingFactors();
+    parser->generateScalingFactors(scaling);
     parser->setFineLevel(-1);
 
     parser->sig_est_.reset(new BerkeleySignatureEstimator(
@@ -114,13 +117,20 @@ void LAPCFGParser::generateCoarseModels() {
     m1_grammar_ = m1_projector.generateGrammar();
 }
 
-void LAPCFGParser::generateScalingFactors() {
+void LAPCFGParser::generateScalingFactors(const string & name) {
+    
+
     const int depth = tag_set_->getDepth();
 
     for (int level = 0; level < depth; ++level) {
         Tracer::println(1, (boost::format("Generating scaling factors (level=%d) ...") % level).str());
 
-        std::shared_ptr<ScalingFactor> sf(new HarmonicScalingFactor(*word_table_, *tag_set_, *(lexicon_[level]), *(grammar_[level]), smooth_unklex_));
+        std::shared_ptr<ScalingFactor> sf;
+        if (name == "max") sf.reset(new MaxScalingFactor(*word_table_, *tag_set_, *(lexicon_[level]), *(grammar_[level]), smooth_unklex_));
+        else if (name == "geometric") sf.reset(new GeometricScalingFactor(*word_table_, *tag_set_, *(lexicon_[level]), *(grammar_[level]), smooth_unklex_));
+        else if (name == "harmonic") sf.reset(new HarmonicScalingFactor(*word_table_, *tag_set_, *(lexicon_[level]), *(grammar_[level]), smooth_unklex_));
+        else throw runtime_error("LAPCFGParser::generateScalingFactors: unknown scaling strategy: " + name);
+
         scaling_factor_.push_back(sf);
         Tracer::println(2, (boost::format("  Grammar: %e") % sf->getGrammarScalingFactor()).str());
     }

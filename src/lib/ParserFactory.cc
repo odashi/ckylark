@@ -20,7 +20,8 @@ std::shared_ptr<Parser> ParserFactory::create(const map<string, any> & args) {
         Tracer::println(1, "Parsing method: LAPCFG");
         std::shared_ptr<LAPCFGParser> parser = LAPCFGParser::loadFromBerkeleyDump(
             any_cast<string>(args.at("model")),
-            any_cast<double>(args.at("smooth-unklex")));
+            any_cast<double>(args.at("smooth-unklex")),
+            any_cast<string>(args.at("scaling")));
         int fine_level = any_cast<int>(args.at("fine-level"));
         parser->setFineLevel(fine_level);
         parser->setPruningThreshold(any_cast<double>(args.at("prune-threshold")));

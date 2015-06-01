@@ -50,6 +50,7 @@ PO::variables_map parseOptions(int argc, char * argv[]) {
         ("fine-level", PO::value<int>()->default_value(-1), "most fine level to parse, or -1 (use all levels)")
         ("prune-threshold", PO::value<double>()->default_value(1e-5), "coarse-to-fine pruning threshold")
         ("smooth-unklex", PO::value<double>()->default_value(1e-10), "smoothing strength using UNK lexicon")
+        ("scaling", PO::value<string>()->default_value("harmonic"), "scaling strategy\n(candidates: 'max', 'geometric', 'harmonic')")
         ("partial", "parse partial (grammar tag contained) sentence")
         ("do-m1-preparse", "do preparsing using G-1 grammar/lexicon")
         ("force-generate", "generate list-of-words tree if parsing fails")
@@ -118,6 +119,7 @@ int main(int argc, char * argv[]) {
     parser_args["fine-level"] = args["fine-level"].as<int>();
     parser_args["prune-threshold"] = args["prune-threshold"].as<double>();
     parser_args["smooth-unklex"] = args["smooth-unklex"].as<double>();
+    parser_args["scaling"] = args["scaling"].as<string>();
     parser_args["do-m1-preparse"] = !!args.count("do-m1-preparse");
     parser_args["force-generate"] = !!args.count("force-generate");
     std::shared_ptr<Parser> parser = ParserFactory::create(parser_args);

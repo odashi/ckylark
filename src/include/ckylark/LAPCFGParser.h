@@ -36,7 +36,8 @@ public:
 
     static std::shared_ptr<LAPCFGParser> loadFromBerkeleyDump(
         const std::string & path,
-        double smooth_unklex);
+        double smooth_unklex,
+        const std::string & scaling);
 
     virtual ParserResult parse(
         const std::vector<std::string> & sentence,
@@ -88,7 +89,7 @@ private:
     void loadLexicon(const std::string & path);
     void loadGrammar(const std::string & path);
     void generateCoarseModels();
-    void generateScalingFactors();
+    void generateScalingFactors(const std::string & name);
     
     void setUNKLexiconSmoothing(double value);
     
