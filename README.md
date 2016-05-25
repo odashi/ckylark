@@ -54,14 +54,14 @@ sentences:
 
     src/bin/ckylark --model (model prefix) < (your word-segmented corpus)
 
-`--model` requires the prefix of model file like `model/wsj` in
+`--model` requires the prefix of model file like `data/wsj` in
 this repository.
-(`model/wsj` is English model. if you need to parse Japanese
-sentences, use `model/jdc` instead)
+(`data/wsj` is English model. if you need to parse Japanese
+sentences, use `data/jdc` instead)
 
 For example,
 
-    $ echo "This is a pen ." | ckylark --model wsj
+    $ echo "This is a pen ." | ckylark --model data/wsj
     ( (S (NP (DT This)) (VP (VBZ is) (NP (DT a) (NN pen))) (. .)) )
 
 `Ckylark` uses the text dump files of original `Berkeley Parser`
